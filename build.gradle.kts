@@ -25,8 +25,11 @@ dependencies {
     implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.graphql:micronaut-graphql")
+
+    //implementation("com.graphql-java-kickstart:graphql-java-tools")
+
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
-    implementation("io.micronaut.security:micronaut-security-jwt")
+    //implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
