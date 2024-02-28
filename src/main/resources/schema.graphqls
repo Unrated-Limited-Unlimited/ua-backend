@@ -1,29 +1,38 @@
 
 type Query{
-    getUser(name: String) : User # Returns a User without Authentication
-    getWhiskeys: [Whiskey]
+    getUser(name: String) : User # Returns a User without Authentication for profile view
 
-    getWhiskey(id: ID) : Whiskey
+    getWhiskeys: [Whiskey]
+    getWhiskey(id: ID!) : Whiskey
 }
 
 type Mutation{
-    createRating(User : ID!) : Rating
+    createRating(rating : RatingInput) : Rating
     createThumb(Rating: ID!, User: ID!) : Thumb
 
-    login(name: String!, password: String!) : User #TODO add session token in args?
-    logout(name: String!, password: String!) : String
+    login(auth : AuthInput) : User #TODO add session token in args?
+    logout(auth : AuthInput) : String
 }
 
-type Authentication{ # Needed?
-    id: ID,
-    user: User,
+input RatingInput{
+    userId: ID!,
+    whiskeyId: ID!,
+}
 
+input AuthInput{
+    username: String!,
+    password: String!
+}
+
+type Auth{ # Needed?
+    id: ID!,
+    user: User,
     email: String
-    password: String
+    #password: String
 }
 
 type User{
-    id: ID
+    id: ID!
     name: String
     img: String
     createdAt: String #TODO Date?
@@ -46,6 +55,8 @@ type Whiskey{
     rating: Float # Average of all ratings
 }
 
+# Rating -> Review?
+# Thumb -> Feedback?
 type Rating{
     id: ID!
     user: User!

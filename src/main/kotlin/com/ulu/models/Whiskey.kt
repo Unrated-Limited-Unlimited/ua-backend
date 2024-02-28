@@ -1,9 +1,6 @@
 package com.ulu.models
 
-import jakarta.persistence.Entity
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
+import jakarta.persistence.*
 
 @Entity
 class Whiskey(
@@ -11,14 +8,14 @@ class Whiskey(
     val id: Long? = null,
 
     val img: String,
-    val title: String,
+    val title: String, //name?
     val price: Float,
     val summary: String,
     val volume: Float,
     val percentage: Float,
 
-    @OneToMany
-    val ratings: List<Rating>? = null,
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "whiskey", orphanRemoval = true)
+    var ratings: MutableList<Rating> = mutableListOf(),
 
     var rating: Float? = 0f,
 )

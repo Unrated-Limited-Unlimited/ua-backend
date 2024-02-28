@@ -31,6 +31,8 @@ dependencies {
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     //implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
+    implementation("io.micronaut.data:micronaut-data-tx-hibernate")
+
     implementation("org.jetbrains.kotlin:kotlin-reflect:${kotlinVersion}")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:${kotlinVersion}")
     compileOnly("io.micronaut:micronaut-http-client")
@@ -38,6 +40,9 @@ dependencies {
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.postgresql:postgresql")
+
+    runtimeOnly("com.h2database:h2") //For testing
+
     testImplementation("io.micronaut:micronaut-http-client")
     aotPlugins(platform("io.micronaut.platform:micronaut-platform:4.3.2"))
     aotPlugins("io.micronaut.security:micronaut-security-aot")

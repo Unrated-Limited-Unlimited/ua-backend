@@ -1,5 +1,7 @@
-package com.ulu
+package com.ulu.factories
 
+import com.ulu.fetchers.UserDataFetcher
+import com.ulu.fetchers.WhiskeyFetcher
 import graphql.GraphQL
 import graphql.schema.GraphQLSchema
 import graphql.schema.idl.RuntimeWiring
@@ -15,12 +17,15 @@ import java.io.BufferedReader
 import java.io.InputStreamReader
 import jakarta.inject.Singleton
 
+/**
+ * Factory that maps the Query and Mutations defined in the graphql schema to functions/fetchers
+ * */
 @Factory
 class GraphQLFactory {
 
     @Bean
     @Singleton
-    fun graphQL(resourceResolver: ResourceResolver, graphQLDataFetchers: GraphQLDataFetchers): GraphQL {
+    fun graphQL(resourceResolver: ResourceResolver, whiskeyFetcher: WhiskeyFetcher, userDataFetcher: UserDataFetcher): GraphQL {
         val schemaParser = SchemaParser()
 
         val typeRegistry = TypeDefinitionRegistry()
@@ -32,18 +37,15 @@ class GraphQLFactory {
             // Link schema request to dataFetcher functions
             val runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getUser", graphQLDataFetchers.userByIdDataFetcher()))
+                    .dataFetcher("getUser", userDataFetcher.userByIdDataFetcher()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskeys", graphQLDataFetchers.whiskeyFetcher()))
+                    .dataFetcher("getWhiskeys", whiskeyFetcher.whiskeyFetcher()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskey", graphQLDataFetchers.whiskeyByIdFetcher()))
-
+                    .dataFetcher("getWhiskey", whiskeyFetcher.whiskeyByIdFetcher()))
 
                     .build()
-
-
 
             val schemaGenerator = SchemaGenerator()
             val graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring)
