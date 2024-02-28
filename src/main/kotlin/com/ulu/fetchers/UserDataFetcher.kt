@@ -9,7 +9,7 @@ import jakarta.inject.Singleton
 @Singleton
 class UserDataFetcher(private val userDataRepository: UserDataRepository) {
 
-    fun userByIdDataFetcher(): DataFetcher<UserData> {
+    fun byName(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
             val userName: String = dataFetchingEnvironment.getArgument("name")
             return@DataFetcher userDataRepository.getUserDataByName(userName)

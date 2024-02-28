@@ -37,13 +37,13 @@ class GraphQLFactory {
             // Link schema request to dataFetcher functions
             val runtimeWiring = RuntimeWiring.newRuntimeWiring()
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getUser", userDataFetcher.userByIdDataFetcher()))
+                    .dataFetcher("getUser", userDataFetcher.byName()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskeys", whiskeyFetcher.whiskeyFetcher()))
+                    .dataFetcher("getWhiskeys", whiskeyFetcher.allBySortType()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskey", whiskeyFetcher.whiskeyByIdFetcher()))
+                    .dataFetcher("getWhiskey", whiskeyFetcher.byId()))
 
                     .build()
 

@@ -1,19 +1,34 @@
+enum SortType{
+    RATING,
+    POPULAR, #etc
+}
 
 type Query{
     getUser(name: String) : User # Returns a User without Authentication for profile view
-
-    getWhiskeys: [Whiskey]
     getWhiskey(id: ID!) : Whiskey
+    getReview(id: ID!) : Rating
+
+    getWhiskeys(sortType : SortType): [Whiskey]
 }
 
 type Mutation{
+    createUser(register : RegisterInput) : User
+    editUser(register : RegisterInput) : User   #Verify user using JWT token
+
+    createWhiskey(whiskey : WhiskeyInput) : Whiskey
+    editWhiskey(whiskey : WhiskeyInput) : Whiskey
+
+    createThumb(ratingId: ID!, thumb: Boolean) : Thumb #User: ID! identified by JWT
+    editThumb(thumbId: ID!, thumb: Boolean) : Thumb
+
     createRating(rating : RatingInput) : Rating
-    createThumb(Rating: ID!, User: ID!) : Thumb
+    editRating(rating : RatingInput) : Rating
 
     login(auth : AuthInput) : User #TODO add session token in args?
     logout(auth : AuthInput) : String
 }
 
+# Input forms
 input RatingInput{
     userId: ID!,
     whiskeyId: ID!,
@@ -24,30 +39,41 @@ input AuthInput{
     password: String!
 }
 
-type Auth{ # Needed?
-    id: ID!,
-    user: User,
-    email: String
-    #password: String
+input RegisterInput{
+    name: String,
+    email: String,
+    password: String,
+    img: String,
 }
 
+input WhiskeyInput{
+    title: String
+    summary: String
+    img: String
+
+    price: Float
+    volume: Float
+    percentage: Float
+}
+
+# Type definitions
 type User{
     id: ID!
     name: String
     img: String
-    createdAt: String #TODO Date?
+    createdAt: String
 
     ratings: [Rating]
 }
 
-
 type Whiskey{
     id: ID!
 
-    img: String
     title: String
-    price: Float
     summary: String
+    img: String
+
+    price: Float
     volume: Float
     percentage: Float
 
@@ -56,7 +82,7 @@ type Whiskey{
 }
 
 # Rating -> Review?
-# Thumb -> Feedback?
+# Thumb -> Feedback/Vote?
 type Rating{
     id: ID!
     user: User!

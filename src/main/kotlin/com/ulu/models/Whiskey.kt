@@ -4,7 +4,8 @@ import jakarta.persistence.*
 
 @Entity
 class Whiskey(
-    @Id @GeneratedValue
+    @Id
+    @GeneratedValue
     val id: Long? = null,
 
     val img: String,
