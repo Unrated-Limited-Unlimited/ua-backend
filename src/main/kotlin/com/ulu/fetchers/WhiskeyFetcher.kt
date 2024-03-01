@@ -22,7 +22,7 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
 
             if (whiskeyId != null) {
                 val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
-                whiskey.rating = calculateRating(whiskey)
+                whiskey.rating = whiskey.calculateRating()
                 return@DataFetcher whiskey
             } else {
                 return@DataFetcher null
@@ -44,20 +44,12 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
 
             val whiskeys: List<Whiskey> = whiskeyRepository.findAll()
             whiskeys.forEach { whiskey: Whiskey ->
-                whiskey.rating = calculateRating(whiskey)
+                whiskey.rating = whiskey.calculateRating()
             }
             return@DataFetcher whiskeys
         }
     }
 
     // Calculate average rating of whiskey
-    private fun calculateRating(whiskey: Whiskey): Float {
-        var totalRating = 0f
-        var count = 0
-        whiskey.ratings.forEach { rating: Rating ->
-            totalRating += rating.rating
-            count++
-        }
-        return if (count > 0) totalRating / count else 0f
-    }
+
 }
