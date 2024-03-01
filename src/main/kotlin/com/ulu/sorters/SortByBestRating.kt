@@ -8,7 +8,9 @@ import com.ulu.models.Whiskey
  */
 class SortByBestRating {
     fun sortWhiskey(whiskeys : List<Whiskey>) :  List<Whiskey> {
-        return whiskeys.sortedByDescending { whiskey ->
+        val whiskeyWithRatings = whiskeys.filter { it.ratings.isNotEmpty() } // Remove whiskeys with no ratings
+
+        return whiskeyWithRatings.sortedByDescending { whiskey ->
             val averageRating = whiskey.calculateRating()
             val numberOfRatings = whiskey.ratings.size
             averageRating * numberOfRatings // This is the weighting formula, might need tweaking
