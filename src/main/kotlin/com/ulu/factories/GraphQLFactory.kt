@@ -40,6 +40,9 @@ class GraphQLFactory {
                     .dataFetcher("getUser", userDataFetcher.byName()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
+                    .dataFetcher("getLoggedInUser", userDataFetcher.getLoggedInUser()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Query")
                     .dataFetcher("getWhiskeys", whiskeyFetcher.allBySortType()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")

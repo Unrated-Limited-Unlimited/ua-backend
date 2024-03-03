@@ -16,12 +16,12 @@ class UserData(
     val name: String,
     val email: String,
     val password: String,
-    val img: String,
+    val img: String?,
     val createdAt: Instant = Instant.now(),
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
-    val ratings : MutableList<Rating> = mutableListOf(),
+    val ratings: MutableList<Rating> = mutableListOf(),
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
-    var thumbs : MutableList<Thumb> = mutableListOf()
+    var thumbs: MutableList<Thumb> = mutableListOf()
 )

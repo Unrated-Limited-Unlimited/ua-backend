@@ -4,6 +4,7 @@ enum SortType{
 }
 
 type Query{
+    getLoggedInUser : User # Use Authorization: Bearer JWT token
     getUser(name: String) : User # Returns a User without Authentication for profile view
     getWhiskey(id: ID!) : Whiskey
     getReview(id: ID!) : Rating
@@ -12,7 +13,6 @@ type Query{
 }
 
 type Mutation{
-    createUser(register : RegisterInput) : User
     editUser(register : RegisterInput) : User   #Verify user using JWT token
 
     createWhiskey(whiskey : WhiskeyInput) : Whiskey
@@ -24,8 +24,9 @@ type Mutation{
     createRating(rating : RatingInput) : Rating
     editRating(rating : RatingInput) : Rating
 
-    login(auth : AuthInput) : User #TODO add session token in args?
-    logout(auth : AuthInput) : String
+    #login(auth : AuthInput) : User                  # Replaced with POST /login
+    #logout(auth : AuthInput) : String               # Replaced with POST /logout
+    #createUser(register : RegisterInput) : User     # Replaced with POST /register
 }
 
 # Input forms
