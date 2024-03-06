@@ -1,0 +1,45 @@
+micronaut:
+  application:
+    name: unrated
+  server:
+    port: 8000
+
+#micronaut.security.token.jwt.signatures.secret.generator.secret=${JWT_GENERATOR_SIGNATURE_SECRET\:pleaseChangeThisSecretForANewOne}
+#micronaut.security.authentication=bearer
+
+#datasources.default.db-type=postgres
+#datasources.default.dialect=POSTGRES
+#datasources.default.driver-class-name=org.postgresql.Driver
+
+jpa:
+  default:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        hbm2ddl:
+          auto: update
+      show_sql: false
+
+# <H2 JPA testing
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/ulu_prod
+    driver-class-name: org.postgresql.Driver
+    username: ulu_backend
+    password: ${DB_PASSWORD:}
+    dialect: POSTGRES
+#    password: ${JDBC_PASSWORD:""}
+#    url: ${JDBC_URL:`jdbc:h2:mem:default;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`}
+#    username: ${JDBC_USER:sa}
+#    driver-class-name: ${JDBC_DRIVER:org.h2.Driver}
+
+# >
+
+jackson:
+  serialization-inclusion: ALWAYS
+
+graphql:
+  enabled: true
+  graphiql:
+    enabled: true
+

@@ -26,6 +26,8 @@ dependencies {
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.graphql:micronaut-graphql")
 
+    implementation("org.yaml:snakeyaml")
+
     //implementation("com.graphql-java-kickstart:graphql-java-tools")
 
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
