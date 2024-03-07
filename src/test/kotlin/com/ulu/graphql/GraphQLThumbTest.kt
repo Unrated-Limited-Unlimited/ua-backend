@@ -3,8 +3,10 @@ package com.ulu.graphql
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT
 import com.ulu.models.Rating
+import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
+import com.ulu.repositories.ThumbRepository
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
@@ -19,16 +21,20 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class GraphQLThumbTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService, private val thumbRepository: ThumbRepository) {
     private var user : UserData? = null
     private var whiskey : Whiskey? = null
     private var rating : Rating? = null
+    private var thumb : Thumb? = null
 
     @BeforeEach
     fun setup(){
         user = UserData(name = "John", password = "321", email = "test@proton.com", img = "img.txt")
         whiskey = Whiskey(title = "test", summary = "Its a test", img = "owl.png", percentage = 99.9f, price = 199f, volume = 10f)
         rating = Rating(user= user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+
+        // Like own review rating
+        thumb = Thumb(user=user, rating = rating, isGood = true)
 
         databaseService.save(user)
         databaseService.save(whiskey)
@@ -43,67 +49,71 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
     }
 
     @Test
-    fun getWhiskeyTest() {
-        val query = """ { "query": "{ getWhiskey(id:\"${whiskey?.id}\") { id, title, rating, ratings { user{name}, body } } }" }" """
+    fun getThumbTest() {
+        val query = """ { "query": "{ getThumb(ratingId:\"${rating?.id}\") {  id, rating{title},user{name}, isGood  } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("getWhiskey"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("getThumb"))
 
-        val whiskeyById = whiskeyInfo["getWhiskey"] as Map<*, *>
+        val thumbMap = map["getThumb"] as Map<*, *>
+        assertEquals(thumb?.isGood, thumbMap["thumb"])
 
-        assertEquals(whiskey?.title, whiskeyById["title"])
-        assertEquals(2.0, whiskeyById["rating"]) // Is calculated from request
+        val whiskeyMap = map["rating"] as Map<*, *>
+        assertEquals(rating?.title, whiskeyMap["title"])
 
-        val ratings = whiskeyById["ratings"] as ArrayList<*>
-        val ratingMap = ratings[0] as Map<*,*>
-        val userMap = ratingMap["user"] as Map<*, *>
-        assertNotNull(ratings)
-        assertNotNull(userMap)
-
-        assertEquals(rating?.body, ratingMap["body"])
+        val userMap = map["user"] as Map<*, *>
         assertEquals(user?.name, userMap["name"])
     }
 
     @Test
-    fun editWhiskeyTest(){
-        val query = """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskey: {title: \"New title\" }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+    fun editThumbTest(){
+        val query = """ { "query": "mutation{ editThumb(id:\"${thumb?.id}\", isGood: false) { id, rating{title},user{name}, isGood } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("editWhiskey"))
-        assertTrue(whiskeyInfo.containsKey("New title"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("editThumb"))
+
+        val editThumbMap = body["editThumb"] as Map<*, *>
+        assertEquals("false", editThumbMap["isGood"])
     }
 
     @Test
-    fun createWhiskeyTest(){
-        val query = """ { "query": "mutation{ createWhiskey(whiskey: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+    fun createThumbTest(){
+        databaseService.delete(rating)
+        assertFalse(thumbRepository.existsByUserIdAndRatingId(user?.id!!, rating?.id!!))
+
+        val query = """ { "query": "mutation{ createThumb(ratingId: \"${rating?.id}\", isGood: false) { id, rating{title},user{name}, isGood  } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("createWhiskey"))
-        assertTrue(whiskeyInfo.containsKey("New Whiskey"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("editThumb"))
+
+        val editThumbMap = body["editThumb"] as Map<*, *>
+        assertEquals("false", editThumbMap["isGood"])
+
+        assertTrue(thumbRepository.existsByUserIdAndRatingId(user?.id!!, rating?.id!!))
     }
 
     @Test
-    fun deleteWhiskeyTest(){
-        val query = """ { "query": "mutation{ deleteWhiskey(id: \"${whiskey?.id}\") }" } """
+    fun deleteThumbTest(){
+        val query = """ { "query": "mutation{ deleteThumb(id: \"${thumb?.id}\") }" } """
         val body = makeRequest(query)
 
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("deleteWhiskey"))
-        assertEquals("ok",whiskeyInfo["deleteWhiskey"])
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("deleteThumb"))
+        assertEquals("ok",map["deleteThumb"])
 
-        assertFalse(databaseService.existsById(whiskey))
+        assertFalse(databaseService.existsById(thumb))
     }
 
     private fun getJwtToken() : String{

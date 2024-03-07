@@ -17,7 +17,7 @@ class DatabaseService(
     private val ratingRepository: RatingRepository,
     private val thumbRepository: ThumbRepository
 ) {
-    fun <T> save(obj : T) : T{
+    fun <T> save(obj : T) : T {
         if (obj is Whiskey){
             return whiskeyRepository.save(obj)
         }
@@ -45,6 +45,22 @@ class DatabaseService(
         }
         if (obj is Thumb){
             return thumbRepository.delete(obj)
+        }
+        throw Exception("No repository matching parsed type!")
+    }
+
+    fun <T> existsById(obj : T) : Boolean {
+        if (obj is Whiskey){
+            return whiskeyRepository.existsById(obj.id)
+        }
+        if (obj is UserData){
+            return userDataRepository.existsById(obj.id)
+        }
+        if (obj is Rating){
+            return ratingRepository.existsById(obj.id)
+        }
+        if (obj is Thumb){
+            return thumbRepository.existsById(obj.id)
         }
         throw Exception("No repository matching parsed type!")
     }

@@ -49,7 +49,7 @@ class UserAuthController(
             return HttpResponse.badRequest("Username taken!")
         }
         //TODO: add signup requirements, password length, email validation, etc.
-
+        //TODO: Use bcrypt on password.
         // Create new user and save it
         val userData = UserData(name = registerData.username, password = registerData.password, email = registerData.email, img = registerData.img)
         return HttpResponse.ok(userDataRepository.save(userData))
