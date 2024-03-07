@@ -22,7 +22,7 @@ import reactor.core.publisher.FluxSink
  * }
  * */
 @Singleton
-class RefreshTokenPersistence(private val jwtRefreshTokenRepository: JwtRefreshTokenRepository) :
+class JwtPersistenceProvider(private val jwtRefreshTokenRepository: JwtRefreshTokenRepository) :
     RefreshTokenPersistence {
 
     override fun persistToken(event: RefreshTokenGeneratedEvent?) {

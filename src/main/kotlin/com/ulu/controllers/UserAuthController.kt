@@ -11,6 +11,17 @@ import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.DefaultSecurityService
 
+/**
+ * Normal REST controller for user authentication.
+ * The path "/login" is provided by micronaut-security-jwt
+ * JSON body:
+ * {
+ *      "username": "John",
+ *      "password": "123"
+ * }
+ *
+ * Returns a JWT token as well as a refresh token that can be used in
+ * */
 @Controller
 class UserAuthController(
     private val userDataRepository: UserDataRepository,
@@ -23,10 +34,6 @@ class UserAuthController(
         val email: String,
         val img: String?
     )
-
-    //POST /Login is defined by default by micronaut-security, takes in username and password as a json body.
-    //@Secured(SecurityRule.IS_ANONYMOUS)
-    //@Post("/Login")
 
     @Secured(SecurityRule.IS_AUTHENTICATED)
     @Post("/logout")

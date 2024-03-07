@@ -48,7 +48,11 @@ class GraphQLFactory {
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
                     .dataFetcher("getWhiskey", whiskeyFetcher.byId()))
 
-                    .build()
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("editUser", userDataFetcher.editUser()))
+
+
+                .build()
 
             val schemaGenerator = SchemaGenerator()
             val graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring)

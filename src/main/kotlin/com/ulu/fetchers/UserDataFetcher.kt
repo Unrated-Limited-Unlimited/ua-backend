@@ -8,7 +8,10 @@ import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
 
 @Singleton
-class UserDataFetcher(private val userDataRepository: UserDataRepository, private val securityService: DefaultSecurityService) {
+class UserDataFetcher(
+    private val userDataRepository: UserDataRepository,
+    private val securityService: DefaultSecurityService
+) {
 
     fun byName(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
@@ -17,10 +20,27 @@ class UserDataFetcher(private val userDataRepository: UserDataRepository, privat
         }
     }
 
-    fun getLoggedInUser() : DataFetcher<UserData> {
+    fun getLoggedInUser(): DataFetcher<UserData> {
         return DataFetcher {
             if (securityService.isAuthenticated) {
                 return@DataFetcher userDataRepository.getUserDataByName(securityService.authentication.get().name)
+            }
+            return@DataFetcher null
+        }
+    }
+
+    fun editUser(): DataFetcher<UserData> {
+        return DataFetcher {  dataFetchingEnvironment: DataFetchingEnvironment ->
+            if (securityService.isAuthenticated) {
+                val editUserMap : Map<*,*> = dataFetchingEnvironment.getArgument("user")
+
+                val user : UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
+                user.name = editUserMap["name"].toString()
+                user.email = editUserMap["email"].toString()
+                user.password = editUserMap["password"].toString()
+                user.img = editUserMap["img"].toString()
+
+                return@DataFetcher userDataRepository.update(user)
             }
             return@DataFetcher null
         }

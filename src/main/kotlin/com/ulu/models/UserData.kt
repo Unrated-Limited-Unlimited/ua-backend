@@ -13,13 +13,13 @@ class UserData(
     @GeneratedValue
     val id: Long? = null,
 
-    val name: String,
-    val email: String,
-    val password: String,
-    val img: String?,
+    var name: String,
+    var email: String,
+    var password: String,
+    var img: String?,   //Store bytes?
     val createdAt: Instant = Instant.now(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
     val ratings: MutableList<Rating> = mutableListOf(),
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)

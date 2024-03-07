@@ -10,7 +10,7 @@ import jakarta.inject.Singleton
  * Validates authentication requests sent to POST /login
  * */
 @Singleton
-class AuthenticationProviderUserPassword<B>(private val userDataRepository: UserDataRepository) : HttpRequestAuthenticationProvider<B> {
+class AuthProvider<B>(private val userDataRepository: UserDataRepository) : HttpRequestAuthenticationProvider<B> {
 
     override fun authenticate(
         httpRequest: HttpRequest<B>?,

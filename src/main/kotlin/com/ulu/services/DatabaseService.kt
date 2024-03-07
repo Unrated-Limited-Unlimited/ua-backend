@@ -32,4 +32,20 @@ class DatabaseService(
         }
         throw Exception("No repository matching parsed type!")
     }
+
+    fun <T> delete(obj : T) {
+        if (obj is Whiskey){
+            return whiskeyRepository.delete(obj)
+        }
+        if (obj is UserData){
+            return userDataRepository.delete(obj)
+        }
+        if (obj is Rating){
+            return ratingRepository.delete(obj)
+        }
+        if (obj is Thumb){
+            return thumbRepository.delete(obj)
+        }
+        throw Exception("No repository matching parsed type!")
+    }
 }

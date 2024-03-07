@@ -13,16 +13,20 @@ type Query{
 }
 
 type Mutation{
-    editUser(register : RegisterInput) : User   #Verify user using JWT token
+    editUser(user : EditUserInput) : User   #Verify user using JWT token
+    deleteUser : String
 
     createWhiskey(whiskey : WhiskeyInput) : Whiskey
-    editWhiskey(whiskey : WhiskeyInput) : Whiskey
+    editWhiskey(id: ID!, whiskey : WhiskeyInput) : Whiskey
+    deleteWhiskey(id: ID!) : String # Return "ok" as confirmation
 
     createThumb(ratingId: ID!, thumb: Boolean) : Thumb #User: ID! identified by JWT
-    editThumb(thumbId: ID!, thumb: Boolean) : Thumb
+    editThumb(id: ID!, thumb: Boolean): Thumb
+    deleteThumb(id: ID!) : String
 
-    createRating(rating : RatingInput) : Rating
-    editRating(rating : RatingInput) : Rating
+    createRating(whiskeyId: ID!, rating : RatingInput) : Rating
+    editRating(id: ID!, rating : RatingInput) : Rating
+    deleteRating(id: ID!) : String
 
     #login(auth : AuthInput) : User                  # Replaced with POST /login
     #logout(auth : AuthInput) : String               # Replaced with POST /logout
@@ -30,17 +34,19 @@ type Mutation{
 }
 
 # Input forms
+
+#input AuthInput{
+#    username: String!,
+#    password: String!
+#}
+
 input RatingInput{
-    userId: ID!,
-    whiskeyId: ID!,
+    title: String,
+    body: String,
+    rating: Float,
 }
 
-input AuthInput{
-    username: String!,
-    password: String!
-}
-
-input RegisterInput{
+input EditUserInput{
     name: String,
     email: String,
     password: String,
