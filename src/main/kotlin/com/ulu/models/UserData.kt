@@ -1,5 +1,6 @@
 package com.ulu.models
 
+import jakarta.persistence.CascadeType
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
@@ -19,9 +20,9 @@ class UserData(
     var img: String?,   //Store bytes?
     val createdAt: Instant = Instant.now(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user")
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     val ratings: MutableList<Rating> = mutableListOf(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
     var thumbs: MutableList<Thumb> = mutableListOf()
 )

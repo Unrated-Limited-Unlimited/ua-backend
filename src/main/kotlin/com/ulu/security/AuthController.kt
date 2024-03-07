@@ -1,4 +1,4 @@
-package com.ulu.controllers
+package com.ulu.security
 
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
@@ -23,7 +23,7 @@ import io.micronaut.security.utils.DefaultSecurityService
  * Returns a JWT token as well as a refresh token that can be used in
  * */
 @Controller
-class UserAuthController(
+class AuthController(
     private val userDataRepository: UserDataRepository,
     private val jwtRefreshTokenRepository: JwtRefreshTokenRepository
 ) {

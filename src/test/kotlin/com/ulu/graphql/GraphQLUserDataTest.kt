@@ -20,15 +20,23 @@ import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
 class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
-    private var user : UserData? = null
-    private var whiskey : Whiskey? = null
-    private var rating : Rating? = null
+    private var user: UserData? = null
+    private var whiskey: Whiskey? = null
+    private var rating: Rating? = null
 
     @BeforeEach
-    fun setup(){
+    fun setup() {
         user = UserData(name = "John", password = "321", email = "test@proton.com", img = "img.txt")
-        whiskey = Whiskey(title = "test", summary = "Its a test", img = "owl.png", percentage = 99.9f, price = 199f, volume = 10f)
-        rating = Rating(user= user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+        whiskey = Whiskey(
+            title = "test",
+            summary = "Its a test",
+            img = "owl.png",
+            percentage = 99.9f,
+            price = 199f,
+            volume = 10f
+        )
+        rating =
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
 
         databaseService.save(user)
         databaseService.save(whiskey)
@@ -36,7 +44,7 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
     }
 
     @AfterEach
-    fun cleanup(){
+    fun cleanup() {
         databaseService.delete(user)
         databaseService.delete(whiskey)
         databaseService.delete(rating)
@@ -60,7 +68,8 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
 
     @Test
     fun getUserTest() {
-        val query = """ { "query": "{ getUser(name:\"${user?.name}\") { id, name, img, ratings { whiskey{title}, body } } }" }" """
+        val query =
+            """ { "query": "{ getUser(name:\"${user?.name}\") { id, name, img, ratings { whiskey{title}, body } } }" }" """
         val body = makeRequest(query)
 
         assertNotNull(body)
@@ -76,8 +85,9 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
     }
 
     @Test
-    fun editUserTest(){
-        val query = """ { "query": "mutation{ editUser(user: {email: \"New email\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """
+    fun editUserTest() {
+        val query =
+            """ { "query": "mutation{ editUser(user: {email: \"New email\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -86,15 +96,15 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         assertTrue(userInfo.containsKey("editUser"))
 
         val editUserMap = userInfo["editUser"] as Map<*, *>
-        assertEquals("New email",editUserMap["email"])
+        assertEquals("New email", editUserMap["email"])
 
         // Check that unspecified params are not changed to null
-        assertEquals(user?.img,userInfo["img"])
+        assertEquals(user?.img, userInfo["img"])
         assertNotNull(userInfo["img"])
     }
 
     @Test
-    fun deleteUserTest(){
+    fun deleteUserTest() {
         val query = """ { "query": "mutation{ deleteUser }" } """
         val body = makeRequest(query)
         assertNotNull(body)
@@ -103,12 +113,12 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         println(deleteUserInfo.toString())
         assertTrue(deleteUserInfo.containsKey("deleteUser"))
 
-        assertEquals("ok",deleteUserInfo["deleteUser"])
+        assertEquals("ok", deleteUserInfo["deleteUser"])
 
-        assertFalse(databaseService.existsById(user))
+        assertFalse(databaseService.exists(user))
     }
 
-    private fun getJwtToken() : String{
+    private fun getJwtToken(): String {
         // Login
         val credentials = UsernamePasswordCredentials(user?.name, user?.password)
         val request: HttpRequest<*> = HttpRequest.POST("/login", credentials)
@@ -125,7 +135,7 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
     }
 
     private fun makeRequest(query: String): Map<String, Any> {
-        val requestWithAuthorization = HttpRequest.POST("/graphql",query).bearerAuth(getJwtToken())
+        val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken())
         val response = client.toBlocking().exchange(
             requestWithAuthorization, Argument.mapOf(
                 String::class.java,

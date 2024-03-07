@@ -10,6 +10,10 @@ import com.ulu.repositories.UserDataRepository
 import com.ulu.repositories.WhiskeyRepository
 import jakarta.inject.Singleton
 
+/**
+ * Service for accessing multiple of the repositories functions in the same file.
+ * Mostly used for creating/setting up testing data; when instantiating multiple objects.
+ * */
 @Singleton
 class DatabaseService(
     private val userDataRepository: UserDataRepository,
@@ -49,7 +53,7 @@ class DatabaseService(
         throw Exception("No repository matching parsed type!")
     }
 
-    fun <T> existsById(obj : T) : Boolean {
+    fun <T> exists(obj : T) : Boolean {
         if (obj is Whiskey){
             return whiskeyRepository.existsById(obj.id)
         }

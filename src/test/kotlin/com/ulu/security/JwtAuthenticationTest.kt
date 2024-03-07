@@ -1,4 +1,4 @@
-package com.ulu
+package com.ulu.security
 
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT

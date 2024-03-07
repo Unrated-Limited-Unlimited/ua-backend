@@ -20,15 +20,23 @@ import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
 class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
-    private var user : UserData? = null
-    private var whiskey : Whiskey? = null
-    private var rating : Rating? = null
+    private var user: UserData? = null
+    private var whiskey: Whiskey? = null
+    private var rating: Rating? = null
 
     @BeforeEach
-    fun setup(){
+    fun setup() {
         user = UserData(name = "John", password = "321", email = "test@proton.com", img = "img.txt")
-        whiskey = Whiskey(title = "test", summary = "Its a test", img = "owl.png", percentage = 99.9f, price = 199f, volume = 10f)
-        rating = Rating(user= user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+        whiskey = Whiskey(
+            title = "test",
+            summary = "Its a test",
+            img = "owl.png",
+            percentage = 99.9f,
+            price = 199f,
+            volume = 10f
+        )
+        rating =
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
 
         databaseService.save(user)
         databaseService.save(whiskey)
@@ -36,7 +44,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     }
 
     @AfterEach
-    fun cleanup(){
+    fun cleanup() {
         databaseService.delete(user)
         databaseService.delete(whiskey)
         databaseService.delete(rating)
@@ -44,7 +52,8 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
 
     @Test
     fun getRatingTest() {
-        val query = """ { "query": "{ getRating(id:\"${rating?.id}\") { id, title, rating, body, whiskey{title} user{name} } }" }" """
+        val query =
+            """ { "query": "{ getRating(id:\"${rating?.id}\") { id, title, rating, body, whiskey{title} user{name} } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -65,8 +74,9 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     }
 
     @Test
-    fun editRatingTest(){
-        val query = """ { "query": "mutation{ editRating(id:\"${rating?.id}\", rating: {title: \"New title\" }) { id, title, body, rating } }" }" """
+    fun editRatingTest() {
+        val query =
+            """ { "query": "mutation{ editRating(id:\"${rating?.id}\", rating: {title: \"New title\" }) { id, title, body, rating } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -79,9 +89,10 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     }
 
     @Test
-    fun createRatingTest(){
+    fun createRatingTest() {
         databaseService.delete(rating)
-        val query = """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", rating: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", rating: 5 }) { id, title, body, rating } }" }" """
+        val query =
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", rating: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", rating: 5 }) { id, title, body, rating } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -95,7 +106,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     }
 
     @Test
-    fun deleteRatingTest(){
+    fun deleteRatingTest() {
         val query = """ { "query": "mutation{ deleteRating(id: \"${rating?.id}\") }" } """
         val body = makeRequest(query)
 
@@ -104,12 +115,12 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         val map = body["data"] as Map<*, *>
         println(map.toString())
         assertTrue(map.containsKey("deleteRating"))
-        assertEquals("ok",map["deleteRating"])
+        assertEquals("ok", map["deleteRating"])
 
-        assertFalse(databaseService.existsById(whiskey))
+        assertFalse(databaseService.exists(whiskey))
     }
 
-    private fun getJwtToken() : String{
+    private fun getJwtToken(): String {
         // Login
         val credentials = UsernamePasswordCredentials(user?.name, user?.password)
         val request: HttpRequest<*> = HttpRequest.POST("/login", credentials)
@@ -126,7 +137,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     }
 
     private fun makeRequest(query: String): Map<String, Any> {
-        val requestWithAuthorization = HttpRequest.POST("/graphql",query).bearerAuth(getJwtToken())
+        val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken())
         val response = client.toBlocking().exchange(
             requestWithAuthorization, Argument.mapOf(
                 String::class.java,
