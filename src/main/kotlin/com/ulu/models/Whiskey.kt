@@ -20,3 +20,15 @@ class Whiskey(
 
     var rating: Float? = 0f,
 )
+{
+    fun calculateRating(): Float {
+        var totalRating = 0f
+        var count = 0
+        this.ratings.forEach { rating: Rating ->
+            totalRating += rating.rating
+            count++
+        }
+        return if (count > 0) totalRating / count else 0f
+    }
+}
+
