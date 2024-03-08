@@ -15,7 +15,7 @@ class Whiskey(
     val volume: Float,
     val percentage: Float,
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "whiskey", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "whiskey", cascade = [CascadeType.ALL], orphanRemoval = true)
     var ratings: MutableList<Rating> = mutableListOf(),
 
     var rating: Float? = 0f,

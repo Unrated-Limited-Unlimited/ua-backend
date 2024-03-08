@@ -21,6 +21,6 @@ class Rating (
     val rating: Float,
     val createdAt: Instant = Instant.now(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", cascade = [CascadeType.ALL], orphanRemoval = true)
     var thumbs: MutableList<Thumb> = mutableListOf()
 )

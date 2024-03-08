@@ -4,43 +4,50 @@ enum SortType{
 }
 
 type Query{
+    getLoggedInUser : AuthUser # Use Authorization: Bearer JWT token
     getUser(name: String) : User # Returns a User without Authentication for profile view
     getWhiskey(id: ID!) : Whiskey
-    getReview(id: ID!) : Rating
+    getRating(id: ID!) : Rating
+    getThumb(ratingId: ID!) : Thumb # Get own thumb verdict from a rating/review
 
     getWhiskeys(sortType : SortType): [Whiskey]
 }
 
 type Mutation{
-    createUser(register : RegisterInput) : User
-    editUser(register : RegisterInput) : User   #Verify user using JWT token
+    editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
+    deleteUser : String
 
     createWhiskey(whiskey : WhiskeyInput) : Whiskey
-    editWhiskey(whiskey : WhiskeyInput) : Whiskey
+    editWhiskey(id: ID!, whiskey : WhiskeyInput) : Whiskey
+    deleteWhiskey(id: ID!) : String # Return "ok" as confirmation
 
-    createThumb(ratingId: ID!, thumb: Boolean) : Thumb #User: ID! identified by JWT
-    editThumb(thumbId: ID!, thumb: Boolean) : Thumb
+    createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
+    editThumb(id: ID!, isGood: Boolean): Thumb
+    deleteThumb(id: ID!) : String
 
-    createRating(rating : RatingInput) : Rating
-    editRating(rating : RatingInput) : Rating
+    createRating(whiskeyId: ID!, rating : RatingInput) : Rating
+    editRating(id: ID!, rating : RatingInput) : Rating
+    deleteRating(id: ID!) : String
 
-    login(auth : AuthInput) : User #TODO add session token in args?
-    logout(auth : AuthInput) : String
+    #login(auth : AuthInput) : User                  # Replaced with POST /login
+    #logout(auth : AuthInput) : String               # Replaced with POST /logout
+    #createUser(register : RegisterInput) : User     # Replaced with POST /register
 }
 
 # Input forms
+
+#input AuthInput{
+#    username: String!,
+#    password: String!
+#}
+
 input RatingInput{
-    userId: ID!,
-    whiskeyId: ID!,
+    title: String,
+    body: String,
+    rating: Float,
 }
 
-input AuthInput{
-    username: String!,
-    password: String!
-}
-
-input RegisterInput{
-    name: String,
+input EditUserInput{
     email: String,
     password: String,
     img: String,
@@ -54,6 +61,16 @@ input WhiskeyInput{
     price: Float
     volume: Float
     percentage: Float
+}
+
+type AuthUser{
+    id: ID!
+    name: String
+    email: String
+    img: String
+    createdAt: String
+
+    ratings: [Rating]
 }
 
 # Type definitions
@@ -102,5 +119,5 @@ type Thumb{
     rating: Rating!
     user: User!
 
-    thumb: Boolean
+    isGood: Boolean
 }

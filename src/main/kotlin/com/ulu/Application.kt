@@ -44,7 +44,7 @@ class TestDataCreator(private val dbService: DatabaseService) {
         val rating3 = Rating(body = "test", rating = 4f, title = "its amazing", user = user1, whiskey = whiskey2)
 
         // Like review
-        val thumb1 = Thumb(user = user1, rating = rating1, thumb = true)
+        val thumb1 = Thumb(user = user1, rating = rating1, isGood = true)
 
         dbService.save(user1)
         dbService.save(user2)
