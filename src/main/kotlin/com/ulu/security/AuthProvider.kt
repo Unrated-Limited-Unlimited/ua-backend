@@ -1,5 +1,6 @@
 package com.ulu.security
 
+import com.ulu.models.UserData
 import com.ulu.repositories.UserDataRepository
 import io.micronaut.http.HttpRequest
 import io.micronaut.security.authentication.*
@@ -16,10 +17,14 @@ class AuthProvider<B>(private val userDataRepository: UserDataRepository) : Http
         httpRequest: HttpRequest<B>?,
         authenticationRequest: AuthenticationRequest<String, String>
     ): AuthenticationResponse {
-        return if (userDataRepository.getUserDataByNameAndPassword(authenticationRequest.identity,authenticationRequest.secret) != null){
+        val userData: UserData? = userDataRepository.getUserDataByName(authenticationRequest.identity)
+        return if (userData != null && AccountCreationService().checkPassword(
+                authenticationRequest.secret,
+                userData.password
+            )
+        ) {
             AuthenticationResponse.success(authenticationRequest.identity)
-        }
-        else{
+        } else {
             AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH)
         }
     }
