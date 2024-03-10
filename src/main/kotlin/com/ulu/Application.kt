@@ -4,6 +4,7 @@ import com.ulu.models.Rating
 import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
+import com.ulu.security.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.context.event.StartupEvent
 import io.micronaut.runtime.Micronaut.run
@@ -31,8 +32,8 @@ class TestDataCreator(private val dbService: DatabaseService) {
     @EventListener
     fun onStartup(event: StartupEvent) {
         // Add test users
-        val user1 = UserData(name = "Jeff", email = "jeff@bank.no", password = "123", img = "www.test.com/1.png")
-        val user2 = UserData(name = "Paul", email = "pauling@gmail.com", password = "42", img = "www.test.com/2.png")
+        val user1 = UserData(name = "Jeff", email = "jeff@bank.no", password = AccountCreationService().hashPassword("123"), img = "www.test.com/1.png")
+        val user2 = UserData(name = "Paul", email = "pauling@gmail.com", password = AccountCreationService().hashPassword("42"), img = "www.test.com/2.png")
 
         // Add whiskey products
         val whiskey1 = Whiskey(img = "test.com/img", title = "Test", price = 199.6f, summary = "its a whiskey", volume = 1.5f, percentage = 99.9f)

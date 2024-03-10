@@ -24,13 +24,13 @@ import org.junit.jupiter.api.Assertions.*
 import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
-@MicronautTest
+@MicronautTest(environments = ["test"])
 class JwtAuthenticationTest(@Client("/") val client: HttpClient, private val userDataRepository: UserDataRepository, private val jwtRefreshTokenRepository: JwtRefreshTokenRepository) {
-    private var userData = UserData(name = "Test", password = "123", email = "test@email.com", img = "www.test.com/images")
+    private var userData = UserData(name = "Test", password = AccountCreationService().hashPassword("123"), email = "test@email.com", img = "www.test.com/images")
 
     @BeforeEach
     fun setup(){
-        userData = UserData(name = "Test", password = "123", email = "test@email.com", img = "www.test.com/images")
+        userData = UserData(name = "Test", password = AccountCreationService().hashPassword("123"), email = "test@email.com", img = "www.test.com/images")
         userDataRepository.save(userData)
     }
 
@@ -50,7 +50,7 @@ class JwtAuthenticationTest(@Client("/") val client: HttpClient, private val use
     @Test
     fun successfulLoginReturnsJWT() {
         // Login
-        val credentials = UsernamePasswordCredentials(userData.name, userData.password)
+        val credentials = UsernamePasswordCredentials(userData.name, "123")
         val request: HttpRequest<*> = HttpRequest.POST("/login", credentials)
         val rsp: HttpResponse<BearerAccessRefreshToken> =
             client.toBlocking().exchange(request, BearerAccessRefreshToken::class.java)
@@ -83,7 +83,7 @@ class JwtAuthenticationTest(@Client("/") val client: HttpClient, private val use
         val oldTokenCount = jwtRefreshTokenRepository.count()
 
         // Login
-        val credentials = UsernamePasswordCredentials(userData.name, userData.password)
+        val credentials = UsernamePasswordCredentials(userData.name, "123")
         val request: HttpRequest<*> = HttpRequest.POST("/login", credentials)
         val rsp: HttpResponse<BearerAccessRefreshToken> =
             client.toBlocking().exchange(request, BearerAccessRefreshToken::class.java)

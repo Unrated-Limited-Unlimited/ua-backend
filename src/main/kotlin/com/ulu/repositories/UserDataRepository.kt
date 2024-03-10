@@ -8,6 +8,5 @@ import io.micronaut.data.jpa.repository.JpaRepository
 interface UserDataRepository : JpaRepository<UserData, Long> {
 
     fun existsByName(name: String) : Boolean
-    fun getUserDataByName(name: String) : UserData
-    fun getUserDataByNameAndPassword(identity: String, secret: String): UserData?
+    fun getUserDataByName(name: String) : UserData?
 }

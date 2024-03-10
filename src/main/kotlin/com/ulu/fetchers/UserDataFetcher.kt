@@ -3,6 +3,7 @@ package com.ulu.fetchers
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
+import com.ulu.security.AccountCreationService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -35,12 +36,20 @@ class UserDataFetcher(
         return DataFetcher {  dataFetchingEnvironment: DataFetchingEnvironment ->
             if (securityService.isAuthenticated) {
                 val editUserMap : Map<*,*> = dataFetchingEnvironment.getArgument("user")
-                val user : UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
+                val user : UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: return@DataFetcher null
+
+                val newEmail = editUserMap["email"].toString()
+                if (!AccountCreationService().isValidEmail(newEmail)){
+                    error("Invalid email provided.")
+                }
+
                 user.email = editUserMap["email"].toString()
-                user.password = editUserMap["password"].toString() //TODO: Use BCrypt
+                user.password = AccountCreationService().hashPassword(editUserMap["password"].toString())
                 user.img = editUserMap["img"].toString()
 
+                // Revoke all issued jwt tokens
                 jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
+
                 return@DataFetcher userDataRepository.update(user)
             }
             return@DataFetcher null
