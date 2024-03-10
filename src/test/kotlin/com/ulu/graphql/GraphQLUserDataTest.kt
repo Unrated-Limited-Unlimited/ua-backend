@@ -5,6 +5,7 @@ import com.nimbusds.jwt.SignedJWT
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
+import com.ulu.security.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
@@ -26,7 +27,7 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John", password = "321", email = "test@proton.com", img = "img.txt")
+        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
@@ -120,7 +121,7 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
 
     private fun getJwtToken(): String {
         // Login
-        val credentials = UsernamePasswordCredentials(user?.name, user?.password)
+        val credentials = UsernamePasswordCredentials(user?.name, "321")
         val request: HttpRequest<*> = HttpRequest.POST("/login", credentials)
         val rsp: HttpResponse<BearerAccessRefreshToken> =
             client.toBlocking().exchange(request, BearerAccessRefreshToken::class.java)

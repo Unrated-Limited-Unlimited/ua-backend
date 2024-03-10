@@ -22,13 +22,15 @@ import reactor.core.publisher.Mono
 class ExpiredJwtFilter(private val jwtRefreshTokenRepository: JwtRefreshTokenRepository) : HttpServerFilter {
 
     override fun doFilter(request: HttpRequest<*>, chain: ServerFilterChain): Publisher<MutableHttpResponse<*>> {
-        // Remove "Bearer " from access token
-        val jwt = request.headers["Authorization"].split(" ")[1]
-        val jwtRefreshToken : JwtRefreshToken? = jwtRefreshTokenRepository.findByAccessToken(jwt)
+        if (request.headers.contains("Authorization")){
+            // Remove "Bearer " from access token
+            val jwt = request.headers["Authorization"].split(" ")[1]
+            val jwtRefreshToken : JwtRefreshToken? = jwtRefreshTokenRepository.findByAccessToken(jwt)
 
-        // Filter out marked token requests
-        if (jwtRefreshToken != null && jwtRefreshTokenRepository.getRevokedByRefreshToken(jwtRefreshToken.refreshToken)){
-            return Flux.just(HttpResponse.unauthorized<Any>().body("Invalid JWT Token"))
+            // Filter out marked token requests
+            if (jwtRefreshToken != null && jwtRefreshTokenRepository.getRevokedByRefreshToken(jwtRefreshToken.refreshToken)){
+                return Flux.just(HttpResponse.unauthorized<Any>().body("Invalid JWT Token"))
+            }
         }
         return Mono.from(chain.proceed(request))
     }

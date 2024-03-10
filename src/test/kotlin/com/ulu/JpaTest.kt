@@ -5,16 +5,19 @@ import com.ulu.models.Rating
 import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
+import com.ulu.repositories.RatingRepository
+import com.ulu.repositories.WhiskeyRepository
+import com.ulu.security.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class JpaTest(private val databaseService: DatabaseService) {
+class JpaTest(private val databaseService: DatabaseService, private val whiskeyRepository: WhiskeyRepository, private val ratingRepository: RatingRepository) {
     @Test
     fun test() {
-        val userData = UserData(name = "John", password = "321", email = "test@proton.com", img = "img.txt")
+        val userData = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
@@ -52,8 +55,8 @@ class JpaTest(private val databaseService: DatabaseService) {
     }
 
     @Test
-    fun removeOrphanTest(){
-        val userData = UserData(name = "John", password = "321", email = "test@proton.com", img = "img.txt")
+    fun removeChildTest(){
+        val userData = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
@@ -70,8 +73,16 @@ class JpaTest(private val databaseService: DatabaseService) {
         databaseService.save(whiskey)
         databaseService.save(rating)
 
-        databaseService.delete(whiskey)
+        // Delete whiskey & rating
+        whiskey.ratings.remove(rating)
+        rating.whiskey = null
+        whiskeyRepository.saveAndFlush(whiskey)
+        ratingRepository.saveAndFlush(rating)
 
-        assertFalse(databaseService.exists(rating))
+        whiskeyRepository.delete(whiskey)
+        ratingRepository.delete(rating)
+
+        assertFalse(whiskeyRepository.existsById(whiskey.id))
+        assertFalse(ratingRepository.existsById(rating.id))
     }
 }

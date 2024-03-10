@@ -26,7 +26,6 @@ class UserDataFetcher(
     fun getLoggedInUser(): DataFetcher<UserData> {
         return DataFetcher {
             if (securityService.isAuthenticated) {
-                println(securityService.authentication.get().attributes)
                 return@DataFetcher userDataRepository.getUserDataByName(securityService.authentication.get().name)
             }
             return@DataFetcher null
