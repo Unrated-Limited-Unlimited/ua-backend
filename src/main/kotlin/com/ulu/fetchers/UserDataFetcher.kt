@@ -16,7 +16,7 @@ class UserDataFetcher(
     private val jwtRefreshTokenRepository: JwtRefreshTokenRepository
 ) {
 
-    fun byName(): DataFetcher<UserData> {
+    fun getUser(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
             val userName: String = dataFetchingEnvironment.getArgument("name")
             return@DataFetcher userDataRepository.getUserDataByName(userName)
@@ -52,6 +52,13 @@ class UserDataFetcher(
 
                 return@DataFetcher userDataRepository.update(user)
             }
+            return@DataFetcher null
+        }
+    }
+
+    fun deleteUser(): DataFetcher<UserData> {
+        return DataFetcher { environment: DataFetchingEnvironment ->
+            // TODO
             return@DataFetcher null
         }
     }

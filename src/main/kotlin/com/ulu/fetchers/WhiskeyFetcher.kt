@@ -1,6 +1,5 @@
 package com.ulu.fetchers
 
-import com.ulu.models.Rating
 import com.ulu.models.Whiskey
 import com.ulu.repositories.WhiskeyRepository
 import graphql.schema.DataFetcher
@@ -16,7 +15,7 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
         //PERSONALIZED | based on users reviews on similar whiskeys
     }
 
-    fun byId(): DataFetcher<Whiskey> {
+    fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
             val whiskeyId: String? = dataFetchingEnvironment?.getArgument("id")
 
@@ -30,7 +29,7 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
         }
     }
 
-    fun allBySortType(): DataFetcher<List<Whiskey>> {
+    fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
             val sortType: SortType = dataFetchingEnvironment?.getArgument<String>("sortType").let {
                 when (it) {
@@ -50,6 +49,24 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
         }
     }
 
-    // Calculate average rating of whiskey
+    fun createWhiskey(): DataFetcher<Whiskey> {
+        return DataFetcher { environment: DataFetchingEnvironment ->
+            // TODO
+            return@DataFetcher null
+        }
+    }
 
+    fun editWhiskey(): DataFetcher<Whiskey> {
+        return DataFetcher { environment: DataFetchingEnvironment ->
+            // TODO
+            return@DataFetcher null
+        }
+    }
+
+    fun deleteWhiskey(): DataFetcher<Whiskey> {
+        return DataFetcher { environment: DataFetchingEnvironment ->
+            // TODO
+            return@DataFetcher null
+        }
+    }
 }

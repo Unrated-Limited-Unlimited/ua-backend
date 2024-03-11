@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Assertions.*
 class GraphQLThumbTest(
     @Client("/") private val client: HttpClient,
     private val databaseService: DatabaseService,
-    private val thumbRepository: ThumbRepository
+    private val thumbRepository: ThumbRepository,
 ) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
@@ -52,6 +52,7 @@ class GraphQLThumbTest(
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
+        databaseService.save(thumb)
     }
 
     @AfterEach
@@ -59,12 +60,14 @@ class GraphQLThumbTest(
         databaseService.delete(user)
         databaseService.delete(whiskey)
         databaseService.delete(rating)
+        databaseService.delete(thumb)
     }
 
     @Test
     fun getThumbTest() {
         val query =
             """ { "query": "{ getThumb(ratingId:\"${rating?.id}\") {  id, rating{title},user{name}, isGood  } }" }" """
+        println(query)
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -73,12 +76,12 @@ class GraphQLThumbTest(
         assertTrue(map.containsKey("getThumb"))
 
         val thumbMap = map["getThumb"] as Map<*, *>
-        assertEquals(thumb?.isGood, thumbMap["thumb"])
+        assertEquals(thumb?.isGood, thumbMap["isGood"])
 
-        val whiskeyMap = map["rating"] as Map<*, *>
+        val whiskeyMap = thumbMap["rating"] as Map<*, *>
         assertEquals(rating?.title, whiskeyMap["title"])
 
-        val userMap = map["user"] as Map<*, *>
+        val userMap = thumbMap["user"] as Map<*, *>
         assertEquals(user?.name, userMap["name"])
     }
 
@@ -86,6 +89,8 @@ class GraphQLThumbTest(
     fun editThumbTest() {
         val query =
             """ { "query": "mutation{ editThumb(id:\"${thumb?.id}\", isGood: false) { id, rating{title},user{name}, isGood } }" }" """
+
+        println(query)
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -93,14 +98,14 @@ class GraphQLThumbTest(
         println(map.toString())
         assertTrue(map.containsKey("editThumb"))
 
-        val editThumbMap = body["editThumb"] as Map<*, *>
-        assertEquals("false", editThumbMap["isGood"])
+        val editThumbMap = map["editThumb"] as Map<*, *>
+        assertEquals(false, editThumbMap["isGood"])
     }
 
     @Test
     fun createThumbTest() {
-        databaseService.delete(rating)
-        assertFalse(thumbRepository.existsByUserIdAndRatingId(user?.id!!, rating?.id!!))
+        thumbRepository.delete(thumb)
+        assertFalse(thumbRepository.existsByUserAndRating(user!!, rating!!))
 
         val query =
             """ { "query": "mutation{ createThumb(ratingId: \"${rating?.id}\", isGood: false) { id, rating{title},user{name}, isGood  } }" }" """
@@ -109,12 +114,12 @@ class GraphQLThumbTest(
 
         val map = body["data"] as Map<*, *>
         println(map.toString())
-        assertTrue(map.containsKey("editThumb"))
+        assertTrue(map.containsKey("createThumb"))
 
-        val editThumbMap = body["editThumb"] as Map<*, *>
+        val editThumbMap = map["createThumb"] as Map<*, *>
         assertEquals("false", editThumbMap["isGood"])
 
-        assertTrue(thumbRepository.existsByUserIdAndRatingId(user?.id!!, rating?.id!!))
+        assertTrue(thumbRepository.existsByUserAndRating(user!!, rating!!))
     }
 
     @Test

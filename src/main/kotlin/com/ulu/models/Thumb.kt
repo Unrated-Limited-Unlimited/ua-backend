@@ -14,5 +14,5 @@ class Thumb (
     @ManyToOne
     var rating : Rating? = null,
 
-    val isGood : Boolean
+    var isGood : Boolean
 )
