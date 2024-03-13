@@ -8,12 +8,12 @@ class Whiskey(
     @GeneratedValue
     val id: Long? = null,
 
-    val img: String,
-    val title: String, //name?
-    val price: Float,
-    val summary: String,
-    val volume: Float,
-    val percentage: Float,
+    var img: String,
+    var title: String, //name?
+    var price: Float,
+    var summary: String,
+    var volume: Float,
+    var percentage: Float,
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "whiskey", cascade = [CascadeType.ALL], orphanRemoval = true)
     var ratings: MutableList<Rating> = mutableListOf(),
