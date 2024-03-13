@@ -113,7 +113,7 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
         val whiskeyInfo = body["data"] as Map<*, *>
         println(whiskeyInfo.toString())
         assertTrue(whiskeyInfo.containsKey("deleteWhiskey"))
-        assertEquals("ok", whiskeyInfo["deleteWhiskey"])
+        assertEquals("deleted", whiskeyInfo["deleteWhiskey"])
 
         assertFalse(databaseService.exists(whiskey))
     }

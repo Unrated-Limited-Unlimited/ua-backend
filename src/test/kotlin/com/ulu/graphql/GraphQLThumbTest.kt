@@ -17,11 +17,12 @@ import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.security.authentication.UsernamePasswordCredentials
 import io.micronaut.security.token.render.BearerAccessRefreshToken
+import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
-@MicronautTest(environments = ["test"])
+@MicronautTest(environments = ["test"], rollback = true)
 class GraphQLThumbTest(
     @Client("/") private val client: HttpClient,
     private val databaseService: DatabaseService,
@@ -30,11 +31,12 @@ class GraphQLThumbTest(
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
+    private var rating2: Rating? = null
     private var thumb: Thumb? = null
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        user = UserData(name = "John Johnson", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
@@ -46,21 +48,17 @@ class GraphQLThumbTest(
         rating =
             Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
 
+        rating2 =
+            Rating(user = user, whiskey = whiskey, title = "Mid++", body = "This is an in-depth review.", rating = 3f)
+
         // Like own review rating
         thumb = Thumb(user = user, rating = rating, isGood = true)
 
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
+        databaseService.save(rating2)
         databaseService.save(thumb)
-    }
-
-    @AfterEach
-    fun cleanup() {
-        databaseService.delete(user)
-        databaseService.delete(whiskey)
-        databaseService.delete(rating)
-        databaseService.delete(thumb)
     }
 
     @Test
@@ -104,11 +102,10 @@ class GraphQLThumbTest(
 
     @Test
     fun createThumbTest() {
-        thumbRepository.delete(thumb)
-        assertFalse(thumbRepository.existsByUserAndRating(user!!, rating!!))
+        assertFalse(thumbRepository.existsByUserAndRating(user!!, rating2!!))
 
         val query =
-            """ { "query": "mutation{ createThumb(ratingId: \"${rating?.id}\", isGood: false) { id, rating{title},user{name}, isGood  } }" }" """
+            """ { "query": "mutation{ createThumb(ratingId: \"${rating2?.id}\", isGood: false) { id, rating{title},user{name}, isGood  } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -117,9 +114,11 @@ class GraphQLThumbTest(
         assertTrue(map.containsKey("createThumb"))
 
         val editThumbMap = map["createThumb"] as Map<*, *>
-        assertEquals("false", editThumbMap["isGood"])
+        assertEquals(false, editThumbMap["isGood"])
 
-        assertTrue(thumbRepository.existsByUserAndRating(user!!, rating!!))
+        assertTrue(thumbRepository.existsByUserAndRating(user!!, rating2!!))
+
+        println("pepega")
     }
 
     @Test
@@ -132,7 +131,7 @@ class GraphQLThumbTest(
         val map = body["data"] as Map<*, *>
         println(map.toString())
         assertTrue(map.containsKey("deleteThumb"))
-        assertEquals("ok", map["deleteThumb"])
+        assertEquals("deleted", map["deleteThumb"])
 
         assertFalse(databaseService.exists(thumb))
     }

@@ -39,7 +39,7 @@ class ThumbFetcher(
             val isGood = environment.getArgument("isGood") as Boolean
             val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
             val rating = ratingRepository.findById(ratingId)
-
+            thumbRepository.findAll().forEach{ println(it.user?.name) }
             if (userData == null) {
                 error("User not found")
             }
@@ -76,7 +76,7 @@ class ThumbFetcher(
                 return@DataFetcher "No thumb rating with id: $thumbId"
             }
             thumbRepository.deleteById(thumbId)
-            return@DataFetcher "ok"
+            return@DataFetcher "deleted"
         }
     }
 }

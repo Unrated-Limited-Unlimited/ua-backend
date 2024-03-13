@@ -116,7 +116,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         val map = body["data"] as Map<*, *>
         println(map.toString())
         assertTrue(map.containsKey("deleteRating"))
-        assertEquals("ok", map["deleteRating"])
+        assertEquals("deleted", map["deleteRating"])
 
         assertFalse(databaseService.exists(whiskey))
     }

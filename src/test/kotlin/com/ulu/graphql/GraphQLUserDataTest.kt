@@ -114,7 +114,7 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         println(deleteUserInfo.toString())
         assertTrue(deleteUserInfo.containsKey("deleteUser"))
 
-        assertEquals("ok", deleteUserInfo["deleteUser"])
+        assertEquals("deleted", deleteUserInfo["deleteUser"])
 
         assertFalse(databaseService.exists(user))
     }

@@ -19,14 +19,14 @@ type Mutation{
 
     createWhiskey(whiskey : WhiskeyInput) : Whiskey
     editWhiskey(id: ID!, whiskey : WhiskeyInput) : Whiskey
-    deleteWhiskey(id: ID!) : String # Return "ok" as confirmation
+    deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
 
     createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
     editThumb(id: ID!, isGood: Boolean): Thumb
     deleteThumb(id: ID!) : String
 
-    createRating(whiskeyId: ID!, rating : RatingInput) : Rating
-    editRating(id: ID!, rating : RatingInput) : Rating
+    createRating(whiskeyId: ID!, ratingInput : RatingInput) : Rating
+    editRating(id: ID!, ratingInput : RatingInput) : Rating
     deleteRating(id: ID!) : String
 
     #login(auth : AuthInput) : User                  # Replaced with POST /login

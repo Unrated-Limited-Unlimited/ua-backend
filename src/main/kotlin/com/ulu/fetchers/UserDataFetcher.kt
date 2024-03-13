@@ -56,10 +56,11 @@ class UserDataFetcher(
         }
     }
 
-    fun deleteUser(): DataFetcher<UserData> {
+    fun deleteUser(): DataFetcher<String> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            // TODO
-            return@DataFetcher null
+            val user : UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: return@DataFetcher null
+            userDataRepository.delete(user)
+            return@DataFetcher "deleted"
         }
     }
 }
