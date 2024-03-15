@@ -1,17 +1,14 @@
 package com.ulu.security.controllers
 
-import com.ulu.models.JwtRefreshToken
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
 import com.ulu.security.AccountCreationService
-import io.micronaut.context.annotation.Parameter
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Post
-import io.micronaut.http.annotation.QueryValue
 import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.DefaultSecurityService
@@ -43,22 +40,10 @@ class AuthController(
 
     @Secured(SecurityRule.IS_AUTHENTICATED)
     @Post("/logout")
-    fun logout(request: HttpRequest<*>, @QueryValue allSessions: Boolean? = null): HttpResponse<*> {
+    fun logout(request: HttpRequest<*>): HttpResponse<*> {
         // Invalidates all sessions.
-        if (allSessions == true) {
-            jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
-            return HttpResponse.ok("All sessions logged out!")
-        }
-
-        // Log out of single session.
-        val jwt = request.headers["Authorization"].split(" ")[1]
-        val jwtRefreshToken: JwtRefreshToken? = jwtRefreshTokenRepository.findByAccessToken(jwt)
-        if (jwtRefreshToken != null) {
-            jwtRefreshTokenRepository.updateRevokedByRefreshToken(jwtRefreshToken.refreshToken, true)
-            return HttpResponse.ok("Logged out!")
-        }
-
-        return HttpResponse.serverError("No access tokens found.")
+        jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
+        return HttpResponse.ok("All sessions logged out!")
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
