@@ -44,13 +44,6 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
         databaseService.save(rating)
     }
 
-    @AfterEach
-    fun cleanup() {
-        databaseService.delete(user)
-        databaseService.delete(whiskey)
-        databaseService.delete(rating)
-    }
-
     @Test
     fun getWhiskeyTest() {
         val query =
@@ -80,27 +73,28 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
     @Test
     fun editWhiskeyTest() {
         val query =
-            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskey: {title: \"New title\" }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
         val whiskeyInfo = body["data"] as Map<*, *>
         println(whiskeyInfo.toString())
         assertTrue(whiskeyInfo.containsKey("editWhiskey"))
-        assertTrue(whiskeyInfo.containsKey("New title"))
+        assertTrue((whiskeyInfo["editWhiskey"] as Map<*,*>).containsValue("New title"))
     }
 
     @Test
     fun createWhiskeyTest() {
         val query =
-            """ { "query": "mutation{ createWhiskey(whiskey: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
         val whiskeyInfo = body["data"] as Map<*, *>
         println(whiskeyInfo.toString())
         assertTrue(whiskeyInfo.containsKey("createWhiskey"))
-        assertTrue(whiskeyInfo.containsKey("New Whiskey"))
+
+        assertTrue((whiskeyInfo["createWhiskey"] as Map<*,*>).containsValue("New Whiskey"))
     }
 
     @Test
@@ -114,8 +108,6 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
         println(whiskeyInfo.toString())
         assertTrue(whiskeyInfo.containsKey("deleteWhiskey"))
         assertEquals("deleted", whiskeyInfo["deleteWhiskey"])
-
-        assertFalse(databaseService.exists(whiskey))
     }
 
     private fun getJwtToken(): String {

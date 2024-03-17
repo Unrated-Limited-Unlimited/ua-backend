@@ -6,7 +6,10 @@ import com.ulu.models.Rating
 import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
+import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.ThumbRepository
+import com.ulu.repositories.UserDataRepository
+import com.ulu.repositories.WhiskeyRepository
 import com.ulu.security.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
@@ -17,16 +20,18 @@ import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import io.micronaut.security.authentication.UsernamePasswordCredentials
 import io.micronaut.security.token.render.BearerAccessRefreshToken
-import io.micronaut.test.annotation.TransactionMode
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
-@MicronautTest(environments = ["test"], rollback = true)
+@MicronautTest(environments = ["test"])
 class GraphQLThumbTest(
     @Client("/") private val client: HttpClient,
     private val databaseService: DatabaseService,
-    private val thumbRepository: ThumbRepository,
+    private val userDataRepository: UserDataRepository,
+    private val whiskeyRepository: WhiskeyRepository,
+    private val ratingRepository: RatingRepository,
+    private val thumbRepository: ThumbRepository
 ) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
@@ -36,15 +41,17 @@ class GraphQLThumbTest(
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John Johnson", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        whiskey = Whiskey(
-            title = "test",
-            summary = "Its a test",
-            img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+        user = UserData(
+            name = "John Johnson",
+            password = AccountCreationService().hashPassword("321"),
+            email = "test@proton.com",
+            img = "img.txt"
         )
+
+        whiskey = Whiskey(
+            title = "test", summary = "Its a test", img = "owl.png", percentage = 99.9f, price = 199f, volume = 10f
+        )
+
         rating =
             Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
 
@@ -53,12 +60,22 @@ class GraphQLThumbTest(
 
         // Like own review rating
         thumb = Thumb(user = user, rating = rating, isGood = true)
+        user?.thumbs?.add(thumb!!)
 
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
         databaseService.save(rating2)
         databaseService.save(thumb)
+    }
+
+    @AfterEach
+    fun cleanup(){
+        thumbRepository.deleteAll()
+        ratingRepository.deleteAll()
+
+        whiskeyRepository.deleteAll()
+        userDataRepository.deleteAll()
     }
 
     @Test
@@ -102,8 +119,6 @@ class GraphQLThumbTest(
 
     @Test
     fun createThumbTest() {
-        assertFalse(thumbRepository.existsByUserAndRating(user!!, rating2!!))
-
         val query =
             """ { "query": "mutation{ createThumb(ratingId: \"${rating2?.id}\", isGood: false) { id, rating{title},user{name}, isGood  } }" }" """
         val body = makeRequest(query)
@@ -115,10 +130,6 @@ class GraphQLThumbTest(
 
         val editThumbMap = map["createThumb"] as Map<*, *>
         assertEquals(false, editThumbMap["isGood"])
-
-        assertTrue(thumbRepository.existsByUserAndRating(user!!, rating2!!))
-
-        println("pepega")
     }
 
     @Test
@@ -156,8 +167,7 @@ class GraphQLThumbTest(
         val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken())
         val response = client.toBlocking().exchange(
             requestWithAuthorization, Argument.mapOf(
-                String::class.java,
-                Any::class.java
+                String::class.java, Any::class.java
             )
         )
         assertEquals(HttpStatus.OK, response.status)

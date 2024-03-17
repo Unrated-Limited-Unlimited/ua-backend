@@ -33,32 +33,44 @@ class UserDataFetcher(
     }
 
     fun editUser(): DataFetcher<UserData> {
-        return DataFetcher {  dataFetchingEnvironment: DataFetchingEnvironment ->
-            if (securityService.isAuthenticated) {
-                val editUserMap : Map<*,*> = dataFetchingEnvironment.getArgument("user")
-                val user : UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: return@DataFetcher null
+        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
+            if (!securityService.isAuthenticated) {
+                error("Unauthorized")
+            }
+            val editUserMap: Map<*, *> = dataFetchingEnvironment.getArgument("user")
+            val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
 
-                val newEmail = editUserMap["email"].toString()
-                if (!AccountCreationService().isValidEmail(newEmail)){
+            val newEmail = editUserMap["email"] as String?
+            if (newEmail != null){
+                if (!AccountCreationService().isValidEmail(newEmail)) {
                     error("Invalid email provided.")
                 }
-
-                user.email = editUserMap["email"].toString()
-                user.password = AccountCreationService().hashPassword(editUserMap["password"].toString())
-                user.img = editUserMap["img"].toString()
-
-                // Revoke all issued jwt tokens
-                jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
-
-                return@DataFetcher userDataRepository.update(user)
+                user.email = newEmail
             }
-            return@DataFetcher null
+
+            val newPass = editUserMap["password"] as String?
+            if (newPass != null){
+                if (!AccountCreationService().isValidPassword(newPass)) {
+                    error("Password to weak")
+                }
+                user.password = AccountCreationService().hashPassword(newPass)
+            }
+            val newImg = editUserMap["img"] as String?
+            if (newImg != null) {
+                user.img = newImg
+            }
+
+            // Revoke all issued jwt tokens
+            jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
+
+            return@DataFetcher userDataRepository.update(user)
         }
     }
 
     fun deleteUser(): DataFetcher<String> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val user : UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: return@DataFetcher null
+            val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
+                ?: return@DataFetcher null
             userDataRepository.delete(user)
             return@DataFetcher "deleted"
         }

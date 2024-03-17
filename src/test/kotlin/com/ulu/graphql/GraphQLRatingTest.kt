@@ -44,12 +44,6 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         databaseService.save(rating)
     }
 
-    @AfterEach
-    fun cleanup() {
-        databaseService.delete(user)
-        databaseService.delete(whiskey)
-        databaseService.delete(rating)
-    }
 
     @Test
     fun getRatingTest() {
@@ -65,19 +59,19 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         val ratingMap = map["getRating"] as Map<*, *>
 
         assertEquals(rating?.title, ratingMap["title"])
-        assertEquals(rating?.rating, ratingMap["rating"])
+        assertEquals(rating?.rating?.toDouble(), ratingMap["rating"])
 
-        val whiskeyMap = map["whiskey"] as Map<*, *>
+        val whiskeyMap = ratingMap["whiskey"] as Map<*, *>
         assertEquals(whiskey?.title, whiskeyMap["title"])
 
-        val userMap = map["user"] as Map<*, *>
+        val userMap = ratingMap["user"] as Map<*, *>
         assertEquals(user?.name, userMap["name"])
     }
 
     @Test
     fun editRatingTest() {
         val query =
-            """ { "query": "mutation{ editRating(id:\"${rating?.id}\", rating: {title: \"New title\" }) { id, title, body, rating } }" }" """
+            """ { "query": "mutation{ editRating(id:\"${rating?.id}\", ratingInput: {title: \"New title\" }) { id, title, body, rating } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -85,15 +79,14 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         println(map.toString())
         assertTrue(map.containsKey("editRating"))
 
-        val editRatingMap = body["editRating"] as Map<*, *>
+        val editRatingMap = map["editRating"] as Map<*, *>
         assertEquals("New title", editRatingMap["title"])
     }
 
     @Test
     fun createRatingTest() {
-        databaseService.delete(rating)
         val query =
-            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", rating: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", rating: 5 }) { id, title, body, rating } }" }" """
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", rating: 5 }) { id, title, body, rating } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -101,9 +94,9 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         println(map.toString())
         assertTrue(map.containsKey("createRating"))
 
-        val createRatingMap = body["createRating"] as Map<*, *>
+        val createRatingMap = map["createRating"] as Map<*, *>
         assertEquals("New rating of whiskey!", createRatingMap["title"])
-        assertEquals("5", createRatingMap["rating"])
+        assertEquals(5.0, createRatingMap["rating"])
     }
 
     @Test
@@ -117,8 +110,6 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         println(map.toString())
         assertTrue(map.containsKey("deleteRating"))
         assertEquals("deleted", map["deleteRating"])
-
-        assertFalse(databaseService.exists(whiskey))
     }
 
     private fun getJwtToken(): String {

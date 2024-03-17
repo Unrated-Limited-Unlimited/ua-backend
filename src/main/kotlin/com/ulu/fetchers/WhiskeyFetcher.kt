@@ -4,22 +4,16 @@ import com.ulu.models.Whiskey
 import com.ulu.repositories.WhiskeyRepository
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import io.micronaut.security.utils.DefaultSecurityService
 
 import jakarta.inject.Singleton
 
 
 @Singleton
-class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
-
-    private class WhiskeyInput(
-        val title: String,
-        val summary: String,
-        val img: String,
-
-        val price: Float,
-        val volume: Float,
-        val percentage: Float
-    )
+class WhiskeyFetcher(
+    private val whiskeyRepository: WhiskeyRepository,
+    private val securityService: DefaultSecurityService
+) {
     private enum class SortType {
         RATING,
         POPULAR,
@@ -62,8 +56,24 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
 
     fun createWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val whiskeyInput = environment.getArgument("whiskeyInput") as WhiskeyInput
-            return@DataFetcher null
+            if (!securityService.isAuthenticated) {
+                error("Unauthenticated")
+            }
+            //if (!securityService.authentication.get().roles.contains("admin")){
+            //    error("You must be an admin to create new whiskeys")
+            //}
+            val whiskeyInput =
+                environment.getArgument("whiskeyInput") as Map<*, *>? ?: error("whiskey input not provided")
+            return@DataFetcher whiskeyRepository.save(
+                Whiskey(
+                    title = whiskeyInput["title"] as String,
+                    img = whiskeyInput["img"] as String,
+                    percentage = (whiskeyInput["percentage"] as Double).toFloat(),
+                    price = (whiskeyInput["price"] as Double).toFloat(),
+                    summary = whiskeyInput["summary"] as String,
+                    volume = (whiskeyInput["volume"] as Double).toFloat()
+                )
+            )
         }
     }
 
@@ -74,14 +84,28 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
             if (whiskey.isEmpty) {
                 error("No whiskey with id $whiskeyId.")
             }
-            val whiskeyInput = environment.getArgument("whiskeyInput") as WhiskeyInput
-            whiskey.get().title = whiskeyInput.title
-            whiskey.get().summary = whiskeyInput.summary
-            whiskey.get().img = whiskeyInput.img
-            whiskey.get().price = whiskeyInput.price
-            whiskey.get().volume = whiskeyInput.volume
-            whiskey.get().percentage = whiskeyInput.percentage
+            val whiskeyInput =
+                environment.getArgument("whiskeyInput") as Map<*, *>? ?: error("whiskey input not provided")
 
+            (whiskeyInput["title"] as? String)?.let { nonNullTitle ->
+                whiskey.get().title = nonNullTitle
+            }
+            (whiskeyInput["img"] as? String)?.let { nonNullImg ->
+                whiskey.get().img = nonNullImg
+            }
+            (whiskeyInput["summary"] as? String)?.let { nonNullSummary ->
+                whiskey.get().summary = nonNullSummary
+            }
+
+            (whiskeyInput["percentage"] as? Double)?.let { nonNullPercentage ->
+                whiskey.get().percentage = nonNullPercentage.toFloat()
+            }
+            (whiskeyInput["price"] as? Double)?.let { nonNullPrice ->
+                whiskey.get().price = nonNullPrice.toFloat()
+            }
+            (whiskeyInput["volume"] as? Double)?.let { nonNullVolume ->
+                whiskey.get().volume = nonNullVolume.toFloat()
+            }
             return@DataFetcher whiskeyRepository.update(whiskey.get())
         }
     }
@@ -93,8 +117,9 @@ class WhiskeyFetcher(private val whiskeyRepository: WhiskeyRepository) {
             if (whiskey.isEmpty) {
                 error("No whiskey with id $whiskeyId.")
             }
-            whiskeyRepository.deleteById(whiskeyId)
-            return@DataFetcher "Deleted"
+            whiskey.get().ratings.clear()
+            whiskeyRepository.delete(whiskey.get())
+            return@DataFetcher "deleted"
         }
     }
 }

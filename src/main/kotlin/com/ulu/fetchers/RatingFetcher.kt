@@ -16,16 +16,9 @@ class RatingFetcher(
     private val userDataRepository: UserDataRepository,
     private val securityService: DefaultSecurityService,
 ) {
-
-    private class RatingInput(
-        val title: String,
-        val body: String,
-        val rating: Float,
-    )
-
     fun getRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val ratingId = (environment.getArgument("ratingId") as String).toLong()
+            val ratingId = (environment.getArgument("id") as String).toLong()
             val rating = ratingRepository.findById(ratingId)
             if (rating.isEmpty) {
                 error("Rating with id $ratingId not found")
@@ -41,10 +34,18 @@ class RatingFetcher(
             if (whiskey.isEmpty) {
                 error("No whiskey with id $whiskeyId.")
             }
-            val ratingInput = environment.getArgument("ratingInput") as RatingInput
+            val ratingInput = environment.getArgument("ratingInput") as Map<*, *>
             val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
 
-            return@DataFetcher ratingRepository.save(Rating(user = userData, whiskey = whiskey.get(), body = ratingInput.body, rating = ratingInput.rating, title = ratingInput.title))
+            return@DataFetcher ratingRepository.save(
+                Rating(
+                    user = userData,
+                    whiskey = whiskey.get(),
+                    body = ratingInput["body"] as String,
+                    rating = (ratingInput["rating"] as Double).toFloat(),
+                    title = ratingInput["title"] as String
+                )
+            )
         }
     }
 
@@ -55,13 +56,22 @@ class RatingFetcher(
             if (rating.isEmpty) {
                 error("No rating with id $ratingId.")
             }
-            if (rating.get().user!!.name != securityService.authentication.get().name){
+            if (rating.get().user!!.name != securityService.authentication.get().name) {
                 error("Can't edit someone else's rating")
             }
-            val ratingInput = environment.getArgument("ratingInput") as RatingInput
-            rating.get().title = ratingInput.title
-            rating.get().body = ratingInput.body
-            rating.get().rating = ratingInput.rating
+            val ratingInput = environment.getArgument("ratingInput") as Map<*, *>
+            val newTitle : String? = ratingInput["title"] as String?
+            if (!newTitle.isNullOrEmpty()){
+                rating.get().title = newTitle
+            }
+            val newBody =  ratingInput["body"] as String?
+            if (!newBody.isNullOrEmpty()){
+                rating.get().body = newBody
+            }
+            val newRating = (ratingInput["rating"] as String?)?.toFloat()
+            if (newRating != null) {
+                rating.get().rating = newRating
+            }
             return@DataFetcher ratingRepository.update(rating.get())
         }
     }
@@ -73,7 +83,7 @@ class RatingFetcher(
             if (rating.isEmpty) {
                 error("No rating with id $ratingId.")
             }
-            if (rating.get().user!!.name != securityService.authentication.get().name){
+            if (rating.get().user!!.name != securityService.authentication.get().name) {
                 error("Can't delete someone else's rating")
             }
             ratingRepository.delete(rating.get())

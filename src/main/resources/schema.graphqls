@@ -17,8 +17,8 @@ type Mutation{
     editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
     deleteUser : String
 
-    createWhiskey(whiskey : WhiskeyInput) : Whiskey
-    editWhiskey(id: ID!, whiskey : WhiskeyInput) : Whiskey
+    createWhiskey(whiskeyInput : WhiskeyInput) : Whiskey
+    editWhiskey(id: ID!, whiskeyInput : WhiskeyInput) : Whiskey
     deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
 
     createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT

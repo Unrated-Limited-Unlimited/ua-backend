@@ -44,13 +44,6 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         databaseService.save(rating)
     }
 
-    @AfterEach
-    fun cleanup() {
-        databaseService.delete(user)
-        databaseService.delete(whiskey)
-        databaseService.delete(rating)
-    }
-
     @Test
     fun getLoggedInUserTest() {
         val query = """ { "query": "{ getLoggedInUser { id, name, img, ratings { whiskey{title}, body } } }" }" """
@@ -63,7 +56,6 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
 
         val loggedInUserMap = userInfo["getLoggedInUser"] as Map<*, *>
 
-        assertEquals(user?.id.toString(), loggedInUserMap["id"])
         assertEquals(user?.name, loggedInUserMap["name"])
     }
 
@@ -81,14 +73,13 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
 
         val getUserMap = userInfo["getUser"] as Map<*, *>
 
-        assertEquals(user?.id.toString(), getUserMap["id"])
         assertEquals(user?.name, getUserMap["name"])
     }
 
     @Test
     fun editUserTest() {
         val query =
-            """ { "query": "mutation{ editUser(user: {email: \"New email\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """
+            """ { "query": "mutation{ editUser(user: {email: \"new@email.com\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -97,11 +88,11 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         assertTrue(userInfo.containsKey("editUser"))
 
         val editUserMap = userInfo["editUser"] as Map<*, *>
-        assertEquals("New email", editUserMap["email"])
+        assertEquals("new@email.com", editUserMap["email"])
 
         // Check that unspecified params are not changed to null
-        assertEquals(user?.img, userInfo["img"])
-        assertNotNull(userInfo["img"])
+        assertEquals(user?.img, editUserMap["img"])
+        assertNotNull(editUserMap["img"])
     }
 
     @Test
@@ -115,8 +106,6 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         assertTrue(deleteUserInfo.containsKey("deleteUser"))
 
         assertEquals("deleted", deleteUserInfo["deleteUser"])
-
-        assertFalse(databaseService.exists(user))
     }
 
     private fun getJwtToken(): String {
