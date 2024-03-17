@@ -23,7 +23,7 @@ class LoginProvider<B>(private val userDataRepository: UserDataRepository) : Htt
                 userData.password
             )
         ) {
-            AuthenticationResponse.success(authenticationRequest.identity)
+            AuthenticationResponse.success(authenticationRequest.identity, userData.roles)
         } else {
             AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH)
         }

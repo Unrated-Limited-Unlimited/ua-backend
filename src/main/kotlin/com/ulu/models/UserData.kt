@@ -1,6 +1,7 @@
 package com.ulu.models
 
 import jakarta.persistence.CascadeType
+import jakarta.persistence.ElementCollection
 import jakarta.persistence.Entity
 import jakarta.persistence.FetchType
 import jakarta.persistence.GeneratedValue
@@ -24,5 +25,8 @@ class UserData(
     val ratings: MutableList<Rating> = mutableListOf(),
 
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
-    var thumbs: MutableList<Thumb> = mutableListOf()
+    var thumbs: MutableList<Thumb> = mutableListOf(),
+
+    @ElementCollection(fetch = FetchType.EAGER)
+    val roles : MutableList<String> = mutableListOf("ROLE_USER")
 )
