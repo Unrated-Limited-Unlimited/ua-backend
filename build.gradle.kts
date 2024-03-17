@@ -27,6 +27,8 @@ dependencies {
     implementation("io.micronaut.graphql:micronaut-graphql")
 
     implementation("at.favre.lib:bcrypt:0.10.2")
+    implementation("org.yaml:snakeyaml")
+    //implementation("com.graphql-java-kickstart:graphql-java-tools")
 
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
     implementation("io.micronaut.security:micronaut-security-jwt")
