@@ -46,7 +46,7 @@ class RatingFetcher(
                     user = userData,
                     whiskey = whiskey.get(),
                     body = ratingInput["body"] as String,
-                    rating = (ratingInput["rating"] as Double).toFloat(),
+                    score = ratingInput["score"] as Double,
                     title = ratingInput["title"] as String
                 )
             )
@@ -60,17 +60,10 @@ class RatingFetcher(
                 error("Can't edit someone else's rating")
             }
             val ratingInput = environment.getArgument("ratingInput") as Map<*, *>
-            val newTitle : String? = ratingInput["title"] as String?
-            if (!newTitle.isNullOrEmpty()){
-                rating.title = newTitle
-            }
-            val newBody =  ratingInput["body"] as String?
-            if (!newBody.isNullOrEmpty()){
-                rating.body = newBody
-            }
-            val newRating = (ratingInput["rating"] as String?)?.toFloat()
-            if (newRating != null) {
-                rating.rating = newRating
+            with(rating){
+                title = ratingInput["title"] as? String ?: title
+                body = ratingInput["body"] as? String ?: body
+                score = ratingInput["score"] as? Double ?: score
             }
             return@DataFetcher ratingRepository.update(rating)
         }

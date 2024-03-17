@@ -27,17 +27,22 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        user = UserData(
+            name = "John",
+            password = AccountCreationService().hashPassword("321"),
+            email = "test@proton.com",
+            img = "img.txt"
+        )
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
             img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
         rating =
-            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
         databaseService.save(user)
         databaseService.save(whiskey)
@@ -48,7 +53,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     @Test
     fun getRatingTest() {
         val query =
-            """ { "query": "{ getRating(id:\"${rating?.id}\") { id, title, rating, body, whiskey{title} user{name} } }" }" """
+            """ { "query": "{ getRating(id:\"${rating?.id}\") { id, title, score, body, whiskey{title} user{name} } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -59,7 +64,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         val ratingMap = map["getRating"] as Map<*, *>
 
         assertEquals(rating?.title, ratingMap["title"])
-        assertEquals(rating?.rating?.toDouble(), ratingMap["rating"])
+        assertEquals(rating?.score, ratingMap["score"])
 
         val whiskeyMap = ratingMap["whiskey"] as Map<*, *>
         assertEquals(whiskey?.title, whiskeyMap["title"])
@@ -71,7 +76,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     @Test
     fun editRatingTest() {
         val query =
-            """ { "query": "mutation{ editRating(id:\"${rating?.id}\", ratingInput: {title: \"New title\" }) { id, title, body, rating } }" }" """
+            """ { "query": "mutation{ editRating(id:\"${rating?.id}\", ratingInput: {title: \"New title\" }) { id, title, body, score } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -86,7 +91,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     @Test
     fun createRatingTest() {
         val query =
-            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", rating: 5 }) { id, title, body, rating } }" }" """
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 5 }) { id, title, body, score } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -96,7 +101,7 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
 
         val createRatingMap = map["createRating"] as Map<*, *>
         assertEquals("New rating of whiskey!", createRatingMap["title"])
-        assertEquals(5.0, createRatingMap["rating"])
+        assertEquals(5.0, createRatingMap["score"])
     }
 
     @Test

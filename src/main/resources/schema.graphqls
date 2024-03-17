@@ -44,7 +44,7 @@ type Mutation{
 input RatingInput{
     title: String,
     body: String,
-    rating: Float,
+    score: Float,
 }
 
 input EditUserInput{
@@ -95,7 +95,7 @@ type Whiskey{
     percentage: Float
 
     ratings: [Rating]
-    rating: Float # Average of all ratings
+    avgScore: Float # Average score of all ratings
 }
 
 # Rating -> Review?
@@ -107,7 +107,7 @@ type Rating{
 
     title: String
     body: String
-    rating: Float
+    score: Float
     createdAt: String
 
     thumbs: [Thumb]

@@ -37,17 +37,14 @@ class ThumbFetcher(
 
     fun createThumb(): DataFetcher<Thumb> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val ratingId = (environment.getArgument("ratingId") as String).toLong()
             val isGood = environment.getArgument("isGood") as Boolean
-            val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
+            val ratingId = (environment.getArgument("ratingId") as String).toLong()
             val rating = ratingRepository.findById(ratingId)
-            thumbRepository.findAll().forEach { println(it.user?.name) }
-            if (userData == null) {
-                error("User not found")
-            }
             if (rating.isEmpty) {
                 error("No rating with id: $ratingId")
             }
+            val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
+                ?: error("User not found")
             if (thumbRepository.existsByUserAndRating(userData, rating.get())) {
                 error("Thumb rating already exists for rating with id: $ratingId")
             }

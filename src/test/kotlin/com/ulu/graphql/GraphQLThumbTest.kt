@@ -42,21 +42,24 @@ class GraphQLThumbTest(
     @BeforeEach
     fun setup() {
         user = UserData(
-            name = "John Johnson",
+            name = "John",
             password = AccountCreationService().hashPassword("321"),
             email = "test@proton.com",
             img = "img.txt"
         )
-
         whiskey = Whiskey(
-            title = "test", summary = "Its a test", img = "owl.png", percentage = 99.9f, price = 199f, volume = 10f
+            title = "test",
+            summary = "Its a test",
+            img = "owl.png",
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
-
         rating =
-            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
         rating2 =
-            Rating(user = user, whiskey = whiskey, title = "Mid++", body = "This is an in-depth review.", rating = 3f)
+            Rating(user = user, whiskey = whiskey, title = "Mid++", body = "This is an in-depth review.", score = 3.0)
 
         // Like own review rating
         thumb = Thumb(user = user, rating = rating, isGood = true)
@@ -70,7 +73,7 @@ class GraphQLThumbTest(
     }
 
     @AfterEach
-    fun cleanup(){
+    fun cleanup() {
         thumbRepository.deleteAll()
         ratingRepository.deleteAll()
 

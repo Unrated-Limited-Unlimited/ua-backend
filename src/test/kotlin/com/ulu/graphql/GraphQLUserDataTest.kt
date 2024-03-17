@@ -32,12 +32,12 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
             title = "test",
             summary = "Its a test",
             img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
         rating =
-            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
         databaseService.save(user)
         databaseService.save(whiskey)

@@ -28,16 +28,18 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
     @BeforeEach
     fun setup() {
         user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        user?.roles?.add("ROLE_ADMIN")
+
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
             img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
         rating =
-            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
         databaseService.save(user)
         databaseService.save(whiskey)
@@ -47,7 +49,7 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
     @Test
     fun getWhiskeyTest() {
         val query =
-            """ { "query": "{ getWhiskey(id:\"${whiskey?.id}\") { id, title, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "{ getWhiskey(id:\"${whiskey?.id}\") { id, title, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -58,7 +60,7 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
         val whiskeyById = whiskeyInfo["getWhiskey"] as Map<*, *>
 
         assertEquals(whiskey?.title, whiskeyById["title"])
-        assertEquals(2.0, whiskeyById["rating"]) // Is calculated from request
+        assertEquals(2.0, whiskeyById["avgScore"]) // Is calculated from request
 
         val ratings = whiskeyById["ratings"] as ArrayList<*>
         val ratingMap = ratings[0] as Map<*, *>
@@ -73,7 +75,7 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
     @Test
     fun editWhiskeyTest() {
         val query =
-            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -86,7 +88,7 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
     @Test
     fun createWhiskeyTest() {
         val query =
-            """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
