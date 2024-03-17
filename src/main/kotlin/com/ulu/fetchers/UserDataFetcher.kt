@@ -25,10 +25,11 @@ class UserDataFetcher(
 
     fun getLoggedInUser(): DataFetcher<UserData> {
         return DataFetcher {
-            if (securityService.isAuthenticated) {
-                return@DataFetcher userDataRepository.getUserDataByName(securityService.authentication.get().name)
+            if (!securityService.isAuthenticated) {
+                error("Unauthenticated")
             }
-            return@DataFetcher null
+            return@DataFetcher userDataRepository.getUserDataByName(securityService.authentication.get().name)
+
         }
     }
 
@@ -68,7 +69,10 @@ class UserDataFetcher(
     }
 
     fun deleteUser(): DataFetcher<String> {
-        return DataFetcher { environment: DataFetchingEnvironment ->
+        return DataFetcher {
+            if (!securityService.isAuthenticated) {
+                error("Unauthorized")
+            }
             val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
                 ?: return@DataFetcher null
             userDataRepository.delete(user)
