@@ -26,12 +26,12 @@ dependencies {
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.graphql:micronaut-graphql")
 
+    implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("org.yaml:snakeyaml")
-
     //implementation("com.graphql-java-kickstart:graphql-java-tools")
 
     implementation("io.micronaut.kotlin:micronaut-kotlin-runtime")
-    //implementation("io.micronaut.security:micronaut-security-jwt")
+    implementation("io.micronaut.security:micronaut-security-jwt")
     implementation("io.micronaut.sql:micronaut-jdbc-hikari")
     implementation("io.micronaut.data:micronaut-data-tx-hibernate")
 
@@ -43,7 +43,7 @@ dependencies {
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
     runtimeOnly("org.postgresql:postgresql")
 
-    runtimeOnly("com.h2database:h2") //For testing
+    runtimeOnly("com.h2database:h2") //For testing JPA local
 
     testImplementation("io.micronaut:micronaut-http-client")
     aotPlugins(platform("io.micronaut.platform:micronaut-platform:4.3.2"))

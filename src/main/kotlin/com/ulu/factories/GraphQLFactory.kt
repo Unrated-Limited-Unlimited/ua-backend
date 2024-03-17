@@ -1,5 +1,7 @@
 package com.ulu.factories
 
+import com.ulu.fetchers.RatingFetcher
+import com.ulu.fetchers.ThumbFetcher
 import com.ulu.fetchers.UserDataFetcher
 import com.ulu.fetchers.WhiskeyFetcher
 import graphql.GraphQL
@@ -25,7 +27,7 @@ class GraphQLFactory {
 
     @Bean
     @Singleton
-    fun graphQL(resourceResolver: ResourceResolver, whiskeyFetcher: WhiskeyFetcher, userDataFetcher: UserDataFetcher): GraphQL {
+    fun graphQL(resourceResolver: ResourceResolver, whiskeyFetcher: WhiskeyFetcher, userDataFetcher: UserDataFetcher, ratingFetcher: RatingFetcher, thumbFetcher: ThumbFetcher): GraphQL {
         val schemaParser = SchemaParser()
 
         val typeRegistry = TypeDefinitionRegistry()
@@ -36,16 +38,64 @@ class GraphQLFactory {
 
             // Link schema request to dataFetcher functions
             val runtimeWiring = RuntimeWiring.newRuntimeWiring()
+
+                // User
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getUser", userDataFetcher.userByIdDataFetcher()))
+                    .dataFetcher("getUser", userDataFetcher.getUser()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskeys", whiskeyFetcher.whiskeyFetcher()))
+                    .dataFetcher("getLoggedInUser", userDataFetcher.getLoggedInUser()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("editUser", userDataFetcher.editUser()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("deleteUser", userDataFetcher.deleteUser()))
+
+                // Whiskey
+                .type(TypeRuntimeWiring.newTypeWiring("Query")
+                    .dataFetcher("getWhiskeys", whiskeyFetcher.getWhiskeys()))
 
                 .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskey", whiskeyFetcher.whiskeyByIdFetcher()))
+                    .dataFetcher("getWhiskey", whiskeyFetcher.getWhiskey()))
 
-                    .build()
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("createWhiskey", whiskeyFetcher.createWhiskey()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("editWhiskey", whiskeyFetcher.editWhiskey()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("deleteWhiskey", whiskeyFetcher.deleteWhiskey()))
+
+                // Rating
+                .type(TypeRuntimeWiring.newTypeWiring("Query")
+                    .dataFetcher("getRating", ratingFetcher.getRating()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("createRating", ratingFetcher.createRating()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("editRating", ratingFetcher.editRating()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("deleteRating", ratingFetcher.deleteRating()))
+
+                // Thumb
+                .type(TypeRuntimeWiring.newTypeWiring("Query")
+                    .dataFetcher("getThumb", thumbFetcher.getThumb()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("createThumb", thumbFetcher.createThumb()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("editThumb", thumbFetcher.editThumb()))
+
+                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
+                    .dataFetcher("deleteThumb", thumbFetcher.deleteThumb()))
+
+                // Finish/build the schema
+                .build()
 
             val schemaGenerator = SchemaGenerator()
             val graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring)

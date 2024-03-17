@@ -1,53 +1,96 @@
+enum SortType{
+    RATING,
+    POPULAR, #etc
+}
 
 type Query{
+    getLoggedInUser : AuthUser # Use Authorization: Bearer JWT token
     getUser(name: String) : User # Returns a User without Authentication for profile view
-
-    getWhiskeys: [Whiskey]
     getWhiskey(id: ID!) : Whiskey
+    getRating(id: ID!) : Rating
+    getThumb(ratingId: ID!) : Thumb # Get own thumb verdict from a rating/review
+
+    getWhiskeys(sortType : SortType): [Whiskey]
 }
 
 type Mutation{
-    createRating(rating : RatingInput) : Rating
-    createThumb(Rating: ID!, User: ID!) : Thumb
+    editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
+    deleteUser : String
 
-    login(auth : AuthInput) : User #TODO add session token in args?
-    logout(auth : AuthInput) : String
+    createWhiskey(whiskeyInput : WhiskeyInput) : Whiskey
+    editWhiskey(id: ID!, whiskeyInput : WhiskeyInput) : Whiskey
+    deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
+
+    createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
+    editThumb(id: ID!, isGood: Boolean): Thumb
+    deleteThumb(id: ID!) : String
+
+    createRating(whiskeyId: ID!, ratingInput : RatingInput) : Rating
+    editRating(id: ID!, ratingInput : RatingInput) : Rating
+    deleteRating(id: ID!) : String
+
+    #login(auth : AuthInput) : User                  # Replaced with POST /login
+    #logout(auth : AuthInput) : String               # Replaced with POST /logout
+    #createUser(register : RegisterInput) : User     # Replaced with POST /register
 }
+
+# Input forms
+
+#input AuthInput{
+#    username: String!,
+#    password: String!
+#}
 
 input RatingInput{
-    userId: ID!,
-    whiskeyId: ID!,
+    title: String,
+    body: String,
+    rating: Float,
 }
 
-input AuthInput{
-    username: String!,
-    password: String!
+input EditUserInput{
+    email: String,
+    password: String,
+    img: String,
 }
 
-type Auth{ # Needed?
-    id: ID!,
-    user: User,
-    email: String
-    #password: String
+input WhiskeyInput{
+    title: String
+    summary: String
+    img: String
+
+    price: Float
+    volume: Float
+    percentage: Float
 }
 
-type User{
+type AuthUser{
     id: ID!
     name: String
+    email: String
     img: String
-    createdAt: String #TODO Date?
+    createdAt: String
 
     ratings: [Rating]
 }
 
+# Type definitions
+type User{
+    id: ID!
+    name: String
+    img: String
+    createdAt: String
+
+    ratings: [Rating]
+}
 
 type Whiskey{
     id: ID!
 
-    img: String
     title: String
-    price: Float
     summary: String
+    img: String
+
+    price: Float
     volume: Float
     percentage: Float
 
@@ -56,7 +99,7 @@ type Whiskey{
 }
 
 # Rating -> Review?
-# Thumb -> Feedback?
+# Thumb -> Feedback/Vote?
 type Rating{
     id: ID!
     user: User!
@@ -76,5 +119,5 @@ type Thumb{
     rating: Rating!
     user: User!
 
-    thumb: Boolean
+    isGood: Boolean
 }

@@ -16,11 +16,11 @@ class Rating (
     @ManyToOne
     var whiskey: Whiskey? = null,
 
-    val title: String,
-    val body: String,
-    val rating: Float,
+    var title: String,
+    var body: String,
+    var rating: Float,
     val createdAt: Instant = Instant.now(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", cascade = [CascadeType.ALL], orphanRemoval = true)
     var thumbs: MutableList<Thumb> = mutableListOf()
 )
