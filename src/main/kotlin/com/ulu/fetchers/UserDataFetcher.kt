@@ -39,7 +39,8 @@ class UserDataFetcher(
                 error("Unauthorized")
             }
             val editUserMap: Map<*, *> = dataFetchingEnvironment.getArgument("user")
-            val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
+            val username = securityService.authentication.get().name
+            val user: UserData = userDataRepository.getUserDataByName(username) ?: error("User not found")
 
             val newEmail = editUserMap["email"] as String?
             if (newEmail != null){
@@ -48,7 +49,6 @@ class UserDataFetcher(
                 }
                 user.email = newEmail
             }
-
             val newPass = editUserMap["password"] as String?
             if (newPass != null){
                 if (!AccountCreationService().isValidPassword(newPass)) {
@@ -60,10 +60,8 @@ class UserDataFetcher(
             if (newImg != null) {
                 user.img = newImg
             }
-
             // Revoke all issued jwt tokens
-            jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
-
+            jwtRefreshTokenRepository.updateRevokedByUsername(username, true)
             return@DataFetcher userDataRepository.update(user)
         }
     }

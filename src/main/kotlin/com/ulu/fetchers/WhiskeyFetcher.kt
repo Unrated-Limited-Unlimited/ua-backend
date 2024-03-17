@@ -2,6 +2,10 @@ package com.ulu.fetchers
 
 import com.ulu.models.Whiskey
 import com.ulu.repositories.WhiskeyRepository
+import com.ulu.sorters.SortByBestRating
+import com.ulu.sorters.SortByPrice
+import com.ulu.sorters.SortByRandom
+import com.ulu.sorters.SortByTotalRatings
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -13,12 +17,6 @@ class WhiskeyFetcher(
     private val whiskeyRepository: WhiskeyRepository,
     private val securityService: DefaultSecurityService
 ) {
-    private enum class SortType {
-        RATING,
-        POPULAR,
-        //PERSONALIZED | based on users reviews on similar whiskeys
-    }
-
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
             val whiskeyId: String? = dataFetchingEnvironment?.getArgument("id")
@@ -34,21 +32,17 @@ class WhiskeyFetcher(
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
-            val sortType: SortType = dataFetchingEnvironment?.getArgument<String>("sortType").let {
+            val whiskeys = whiskeyRepository.findAll()
+            val sortedWhiskey = dataFetchingEnvironment?.getArgument<String>("sortType").let {
                 when (it) {
-                    "RATING" -> SortType.RATING
-
-                    else -> SortType.POPULAR
+                    "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
+                    "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
+                    "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
+                    "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
+                    else -> whiskeys
                 }
             }
-
-            //TODO Fetch whiskeys based on sortType enum.
-
-            val whiskeys: List<Whiskey> = whiskeyRepository.findAll()
-            whiskeys.forEach { whiskey: Whiskey ->
-                whiskey.avgScore = whiskey.calculateAvgScore()
-            }
-            return@DataFetcher whiskeys
+            return@DataFetcher sortedWhiskey
         }
     }
 

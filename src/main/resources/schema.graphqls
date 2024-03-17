@@ -1,6 +1,10 @@
 enum SortType{
-    RATING,
-    POPULAR, #etc
+    BEST,
+    PRICE,
+    POPULAR,
+    RANDOM,
+    DEFAULT,
+    #PERSONALIZED # Get "AI" recommended based on user preferences
 }
 
 type Query{
@@ -28,18 +32,7 @@ type Mutation{
     createRating(whiskeyId: ID!, ratingInput : RatingInput) : Rating
     editRating(id: ID!, ratingInput : RatingInput) : Rating
     deleteRating(id: ID!) : String
-
-    #login(auth : AuthInput) : User                  # Replaced with POST /login
-    #logout(auth : AuthInput) : String               # Replaced with POST /logout
-    #createUser(register : RegisterInput) : User     # Replaced with POST /register
 }
-
-# Input forms
-
-#input AuthInput{
-#    username: String!,
-#    password: String!
-#}
 
 input RatingInput{
     title: String,
@@ -98,8 +91,6 @@ type Whiskey{
     avgScore: Float # Average score of all ratings
 }
 
-# Rating -> Review?
-# Thumb -> Feedback/Vote?
 type Rating{
     id: ID!
     user: User!
@@ -112,7 +103,6 @@ type Rating{
 
     thumbs: [Thumb]
 }
-
 
 type Thumb{
     id: ID!
