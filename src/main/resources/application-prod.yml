@@ -33,20 +33,21 @@ micronaut:
         http-method: GET
         access: isAnonymous()
 
+
+
 jpa:
   default:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         hbm2ddl:
-          auto: create
+          auto: update
       show_sql: false
 
-# <H2 JPA testing
 datasources:
   default:
-    url: ${JDBC_URL:`jdbc:h2:mem:default;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`}
-    driver-class-name: ${JDBC_DRIVER:org.h2.Driver}
+    url: jdbc:postgresql://localhost:5432/ulu_prod
+    driver-class-name: org.postgresql.Driver
     username: ulu_backend
     password: ${DB_PASSWORD:}
     dialect: POSTGRES
@@ -58,3 +59,4 @@ graphql:
   enabled: true
   graphiql:
     enabled: true
+

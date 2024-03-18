@@ -4,7 +4,7 @@ import com.ulu.models.Rating
 import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.context.event.StartupEvent
 import io.micronaut.runtime.Micronaut.run

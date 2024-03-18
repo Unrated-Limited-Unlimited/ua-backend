@@ -10,7 +10,7 @@ import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.ThumbRepository
 import com.ulu.repositories.UserDataRepository
 import com.ulu.repositories.WhiskeyRepository
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest

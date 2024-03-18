@@ -78,7 +78,7 @@ class WhiskeyFetcher(
             if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
                 error("You must be an admin to create new whiskeys")
             }
-            val whiskey = getWhiskeyById(environment)
+            val whiskey = getWhiskeyByEnvironmentId(environment)
             val whiskeyInput =
                 environment.getArgument("whiskeyInput") as Map<*, *>? ?: error("whiskey input not provided")
             with(whiskey) {
@@ -103,14 +103,14 @@ class WhiskeyFetcher(
             if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
                 error("You must be an admin to delete whiskeys")
             }
-            val whiskey = getWhiskeyById(environment)
+            val whiskey = getWhiskeyByEnvironmentId(environment)
             whiskey.ratings.clear()
             whiskeyRepository.delete(whiskey)
             return@DataFetcher "deleted"
         }
     }
 
-    private fun getWhiskeyById(environment : DataFetchingEnvironment) : Whiskey {
+    private fun getWhiskeyByEnvironmentId(environment : DataFetchingEnvironment) : Whiskey {
         val whiskeyId = (environment.getArgument("id") as String).toLong()
         val whiskey = whiskeyRepository.findById(whiskeyId)
         if (whiskey.isEmpty) {

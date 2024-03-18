@@ -1,4 +1,4 @@
-package com.ulu.security
+package com.ulu.services
 
 import at.favre.lib.crypto.bcrypt.BCrypt
 import jakarta.inject.Singleton
@@ -8,7 +8,7 @@ import jakarta.inject.Singleton
  *
  * Random salt will be added to the passwords internally by BCrypt.
  * */
-private const val MIN_PASSWORD_LENGTH = 10;
+private const val MIN_PASSWORD_LENGTH = 10
 @Singleton
 class AccountCreationService {
 

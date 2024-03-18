@@ -7,7 +7,7 @@ import com.ulu.models.UserData
 import com.ulu.models.Whiskey
 import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.WhiskeyRepository
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
