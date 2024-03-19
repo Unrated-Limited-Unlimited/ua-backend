@@ -6,10 +6,6 @@ import com.ulu.models.Rating
 import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.repositories.RatingRepository
-import com.ulu.repositories.ThumbRepository
-import com.ulu.repositories.UserDataRepository
-import com.ulu.repositories.WhiskeyRepository
 import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
@@ -28,10 +24,6 @@ import org.junit.jupiter.api.Assertions.*
 class GraphQLThumbTest(
     @Client("/") private val client: HttpClient,
     private val databaseService: DatabaseService,
-    private val userDataRepository: UserDataRepository,
-    private val whiskeyRepository: WhiskeyRepository,
-    private val ratingRepository: RatingRepository,
-    private val thumbRepository: ThumbRepository
 ) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
@@ -74,11 +66,7 @@ class GraphQLThumbTest(
 
     @AfterEach
     fun cleanup() {
-        thumbRepository.deleteAll()
-        ratingRepository.deleteAll()
-
-        whiskeyRepository.deleteAll()
-        userDataRepository.deleteAll()
+        databaseService.deleteAll()
     }
 
     @Test

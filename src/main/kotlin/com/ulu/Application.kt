@@ -4,8 +4,10 @@ import com.ulu.models.Rating
 import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
+import com.ulu.repositories.UserDataRepository
 import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
+import io.micronaut.context.annotation.Requires
 import io.micronaut.context.event.StartupEvent
 import io.micronaut.runtime.Micronaut.run
 import io.micronaut.runtime.event.annotation.EventListener
@@ -27,10 +29,14 @@ fun main(args: Array<String>) {
 
 
 @Singleton
-class TestDataCreator(private val dbService: DatabaseService) {
+class TestDataCreator(private val dbService: DatabaseService, private val userDataRepository: UserDataRepository) {
 
     @EventListener
+    @Requires(notEnv = ["prod"])
     fun onStartup(event: StartupEvent) {
+        if (userDataRepository.getUserDataByName("Jeff") != null){
+            return
+        }
         // Add test users
         val user1 = UserData(name = "Jeff", email = "jeff@bank.no", password = AccountCreationService().hashPassword("123"), img = "www.test.com/1.png")
         val user2 = UserData(name = "Paul", email = "pauling@gmail.com", password = AccountCreationService().hashPassword("42"), img = "www.test.com/2.png")

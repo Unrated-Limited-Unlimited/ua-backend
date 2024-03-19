@@ -17,10 +17,6 @@ data class JwtRefreshToken(
 
     var username: String,
     var refreshToken: String,
-
-    @ElementCollection(fetch = FetchType.EAGER)
-    var accessTokens: MutableList<String> = mutableListOf(),
-
     var revoked: Boolean,
 
     var dateCreated: Instant? = Instant.now()

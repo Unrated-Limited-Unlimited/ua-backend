@@ -49,6 +49,11 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
         databaseService.save(rating)
     }
 
+    @AfterEach
+    fun cleanUp(){
+        databaseService.deleteAll()
+    }
+
 
     @Test
     fun getRatingTest() {

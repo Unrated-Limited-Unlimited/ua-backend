@@ -49,6 +49,11 @@ class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private va
         databaseService.save(rating)
     }
 
+    @AfterEach
+    fun cleanup() {
+        databaseService.deleteAll()
+    }
+
     @Test
     fun getWhiskeyTest() {
         val query =

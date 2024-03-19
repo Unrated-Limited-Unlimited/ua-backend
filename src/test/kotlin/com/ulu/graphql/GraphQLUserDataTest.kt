@@ -44,6 +44,11 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         databaseService.save(rating)
     }
 
+    @AfterEach
+    fun cleanup() {
+        databaseService.deleteAll()
+    }
+
     @Test
     fun getLoggedInUserTest() {
         val query = """ { "query": "{ getLoggedInUser { id, name, img, ratings { whiskey{title}, body } } }" }" """

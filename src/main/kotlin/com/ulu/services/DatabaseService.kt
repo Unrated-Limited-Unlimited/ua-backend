@@ -68,4 +68,12 @@ class DatabaseService(
         }
         throw Exception("No repository matching parsed type!")
     }
+
+    fun deleteAll(){
+        thumbRepository.deleteAll()
+        ratingRepository.deleteAll()
+
+        whiskeyRepository.deleteAll()
+        userDataRepository.deleteAll()
+    }
 }
