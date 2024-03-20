@@ -1,49 +1,3 @@
-micronaut:
-  application:
-    name: unrated
-  server:
-    port: 8000
-  security:
-    token:
-      jwt:
-        signatures:
-          secret:
-            generator:
-              secret: ${JWT_GENERATOR_SIGNATURE_SECRET\:pleaseChangeThisSecretForANewOne}
-        generator:
-          refresh-token:
-            secret: ${JWT_GENERATOR_SIGNATURE_SECRET:pleaseChangeThisSecretForANewOne}
-    authentication: cookie
-    refresh:
-      cookie:
-        enabled: true
-    redirect:
-      enabled: false
-    endpoints:
-      login:
-        enabled: true
-      oauth:
-        enabled: true
-    intercept-url-map:
-      - pattern: /graphql
-        http-method: POST
-        access: isAnonymous()
-
-      - pattern: /graphiql
-        http-method: GET
-        access: isAnonymous()
-
-
-
-jpa:
-  default:
-    properties:
-      hibernate:
-        dialect: org.hibernate.dialect.PostgreSQLDialect
-        hbm2ddl:
-          auto: update
-      show_sql: false
-
 datasources:
   default:
     url: jdbc:postgresql://localhost:5432/ulu_prod
@@ -51,12 +5,3 @@ datasources:
     username: ulu_backend
     password: ${DB_PASSWORD:}
     dialect: POSTGRES
-
-jackson:
-  serialization-inclusion: ALWAYS
-
-graphql:
-  enabled: true
-  graphiql:
-    enabled: true
-

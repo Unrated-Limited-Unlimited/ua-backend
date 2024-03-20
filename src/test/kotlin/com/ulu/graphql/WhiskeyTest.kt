@@ -20,7 +20,7 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class WhiskeyTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
     private var adminUser: UserData? = null
     private var user: UserData? = null
     private var whiskey: Whiskey? = null

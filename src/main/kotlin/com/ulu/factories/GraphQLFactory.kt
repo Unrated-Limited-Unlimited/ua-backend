@@ -1,9 +1,6 @@
 package com.ulu.factories
 
-import com.ulu.fetchers.RatingFetcher
-import com.ulu.fetchers.ThumbFetcher
-import com.ulu.fetchers.UserDataFetcher
-import com.ulu.fetchers.WhiskeyFetcher
+import com.ulu.fetchers.*
 import graphql.GraphQL
 import graphql.schema.GraphQLSchema
 import graphql.schema.idl.RuntimeWiring
@@ -27,7 +24,14 @@ class GraphQLFactory {
 
     @Bean
     @Singleton
-    fun graphQL(resourceResolver: ResourceResolver, whiskeyFetcher: WhiskeyFetcher, userDataFetcher: UserDataFetcher, ratingFetcher: RatingFetcher, thumbFetcher: ThumbFetcher): GraphQL {
+    fun graphQL(
+        resourceResolver: ResourceResolver,
+        whiskeyFetcher: WhiskeyFetcher,
+        userDataFetcher: UserDataFetcher,
+        ratingFetcher: RatingFetcher,
+        thumbFetcher: ThumbFetcher,
+        labelFetcher: LabelFetcher
+    ): GraphQL {
         val schemaParser = SchemaParser()
 
         val typeRegistry = TypeDefinitionRegistry()
@@ -40,59 +44,98 @@ class GraphQLFactory {
             val runtimeWiring = RuntimeWiring.newRuntimeWiring()
 
                 // User
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getUser", userDataFetcher.getUser()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getLoggedInUser", userDataFetcher.getLoggedInUser()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("editUser", userDataFetcher.editUser()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("deleteUser", userDataFetcher.deleteUser()))
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getUser", userDataFetcher.getUser())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getLoggedInUser", userDataFetcher.getLoggedInUser())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("editUser", userDataFetcher.editUser())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("deleteUser", userDataFetcher.deleteUser())
+                )
 
                 // Whiskey
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskeys", whiskeyFetcher.getWhiskeys()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getWhiskey", whiskeyFetcher.getWhiskey()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("createWhiskey", whiskeyFetcher.createWhiskey()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("editWhiskey", whiskeyFetcher.editWhiskey()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("deleteWhiskey", whiskeyFetcher.deleteWhiskey()))
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getWhiskeys", whiskeyFetcher.getWhiskeys())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getWhiskey", whiskeyFetcher.getWhiskey())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("createWhiskey", whiskeyFetcher.createWhiskey())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("editWhiskey", whiskeyFetcher.editWhiskey())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("deleteWhiskey", whiskeyFetcher.deleteWhiskey())
+                )
 
                 // Rating
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getRating", ratingFetcher.getRating()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("createRating", ratingFetcher.createRating()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("editRating", ratingFetcher.editRating()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("deleteRating", ratingFetcher.deleteRating()))
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getRating", ratingFetcher.getRating())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("createRating", ratingFetcher.createRating())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("editRating", ratingFetcher.editRating())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("deleteRating", ratingFetcher.deleteRating())
+                )
 
                 // Thumb
-                .type(TypeRuntimeWiring.newTypeWiring("Query")
-                    .dataFetcher("getThumb", thumbFetcher.getThumb()))
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getThumb", thumbFetcher.getThumb())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("createThumb", thumbFetcher.createThumb())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("editThumb", thumbFetcher.editThumb())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("deleteThumb", thumbFetcher.deleteThumb())
+                )
 
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("createThumb", thumbFetcher.createThumb()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("editThumb", thumbFetcher.editThumb()))
-
-                .type(TypeRuntimeWiring.newTypeWiring("Mutation")
-                    .dataFetcher("deleteThumb", thumbFetcher.deleteThumb()))
+                //Label
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Query")
+                        .dataFetcher("getLabels", labelFetcher.getLabels())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("createLabel", labelFetcher.createLabel())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("editLabel", labelFetcher.editLabel())
+                )
+                .type(
+                    TypeRuntimeWiring.newTypeWiring("Mutation")
+                        .dataFetcher("deleteLabel", labelFetcher.deleteLabel())
+                )
 
                 // Finish/build the schema
                 .build()

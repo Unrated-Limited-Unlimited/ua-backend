@@ -20,19 +20,14 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class UserDataTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
 
     @BeforeEach
     fun setup() {
-        user = UserData(
-            name = "John",
-            password = AccountCreationService().hashPassword("321"),
-            email = "test@proton.com",
-            img = "img.txt"
-        )
+        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
@@ -50,76 +45,72 @@ class GraphQLRatingTest(@Client("/") private val client: HttpClient, private val
     }
 
     @AfterEach
-    fun cleanUp(){
+    fun cleanup() {
         databaseService.deleteAll()
     }
 
-
     @Test
-    fun getRatingTest() {
-        val query =
-            """ { "query": "{ getRating(id:\"${rating?.id}\") { id, title, score, body, whiskey{title} user{name} } }" }" """
+    fun getLoggedInUserTest() {
+        val query = """ { "query": "{ getLoggedInUser { id, name, img, ratings { whiskey{title}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val map = body["data"] as Map<*, *>
-        println(map.toString())
-        assertTrue(map.containsKey("getRating"))
+        val userInfo = body["data"] as Map<*, *>
+        println(userInfo.toString())
+        assertTrue(userInfo.containsKey("getLoggedInUser"))
 
-        val ratingMap = map["getRating"] as Map<*, *>
+        val loggedInUserMap = userInfo["getLoggedInUser"] as Map<*, *>
 
-        assertEquals(rating?.title, ratingMap["title"])
-        assertEquals(rating?.score, ratingMap["score"])
-
-        val whiskeyMap = ratingMap["whiskey"] as Map<*, *>
-        assertEquals(whiskey?.title, whiskeyMap["title"])
-
-        val userMap = ratingMap["user"] as Map<*, *>
-        assertEquals(user?.name, userMap["name"])
+        assertEquals(user?.name, loggedInUserMap["name"])
     }
 
     @Test
-    fun editRatingTest() {
+    fun getUserTest() {
         val query =
-            """ { "query": "mutation{ editRating(id:\"${rating?.id}\", ratingInput: {title: \"New title\" }) { id, title, body, score } }" }" """
+            """ { "query": "{ getUser(name:\"${user?.name}\") { id, name, img, ratings { whiskey{title}, body } } }" }" """
         val body = makeRequest(query)
+
         assertNotNull(body)
 
-        val map = body["data"] as Map<*, *>
-        println(map.toString())
-        assertTrue(map.containsKey("editRating"))
+        val userInfo = body["data"] as Map<*, *>
+        println(userInfo.toString())
+        assertTrue(userInfo.containsKey("getUser"))
 
-        val editRatingMap = map["editRating"] as Map<*, *>
-        assertEquals("New title", editRatingMap["title"])
+        val getUserMap = userInfo["getUser"] as Map<*, *>
+
+        assertEquals(user?.name, getUserMap["name"])
     }
 
     @Test
-    fun createRatingTest() {
+    fun editUserTest() {
         val query =
-            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 5 }) { id, title, body, score } }" }" """
+            """ { "query": "mutation{ editUser(user: {email: \"new@email.com\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val map = body["data"] as Map<*, *>
-        println(map.toString())
-        assertTrue(map.containsKey("createRating"))
+        val userInfo = body["data"] as Map<*, *>
+        println(userInfo.toString())
+        assertTrue(userInfo.containsKey("editUser"))
 
-        val createRatingMap = map["createRating"] as Map<*, *>
-        assertEquals("New rating of whiskey!", createRatingMap["title"])
-        assertEquals(5.0, createRatingMap["score"])
+        val editUserMap = userInfo["editUser"] as Map<*, *>
+        assertEquals("new@email.com", editUserMap["email"])
+
+        // Check that unspecified params are not changed to null
+        assertEquals(user?.img, editUserMap["img"])
+        assertNotNull(editUserMap["img"])
     }
 
     @Test
-    fun deleteRatingTest() {
-        val query = """ { "query": "mutation{ deleteRating(id: \"${rating?.id}\") }" } """
+    fun deleteUserTest() {
+        val query = """ { "query": "mutation{ deleteUser }" } """
         val body = makeRequest(query)
-
         assertNotNull(body)
 
-        val map = body["data"] as Map<*, *>
-        println(map.toString())
-        assertTrue(map.containsKey("deleteRating"))
-        assertEquals("deleted", map["deleteRating"])
+        val deleteUserInfo = body["data"] as Map<*, *>
+        println(deleteUserInfo.toString())
+        assertTrue(deleteUserInfo.containsKey("deleteUser"))
+
+        assertEquals("deleted", deleteUserInfo["deleteUser"])
     }
 
     private fun getJwtToken(): String {

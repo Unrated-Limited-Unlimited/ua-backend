@@ -1,9 +1,6 @@
 package com.ulu
 
-import com.ulu.models.Rating
-import com.ulu.models.Thumb
-import com.ulu.models.UserData
-import com.ulu.models.Whiskey
+import com.ulu.models.*
 import com.ulu.repositories.UserDataRepository
 import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
@@ -37,9 +34,15 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         if (userDataRepository.getUserDataByName("Jeff") != null){
             return
         }
+        val label1 = Label(name = "Good")
+        val label2 = Label(name = "Bad")
+
         // Add test users
         val user1 = UserData(name = "Jeff", email = "jeff@bank.no", password = AccountCreationService().hashPassword("123"), img = "www.test.com/1.png")
         val user2 = UserData(name = "Paul", email = "pauling@gmail.com", password = AccountCreationService().hashPassword("42"), img = "www.test.com/2.png")
+
+        // Make user1 admin, so he can edit/create whiskeys/labels/ratings.
+        user1.roles.add("ROLE_ADMIN")
 
         // Add whiskey products
         val whiskey1 = Whiskey(img = "test.com/img", title = "Test", price = 199.6, summary = "its a whiskey", volume = 1.5, percentage = 99.9)
@@ -52,6 +55,13 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
 
         // Like review
         val thumb1 = Thumb(user = user1, rating = rating1, isGood = true)
+
+        rating1.addLabel(label1)
+        rating2.addLabel(label1)
+        rating2.addLabel(label2)
+
+        dbService.save(label1)
+        dbService.save(label2)
 
         dbService.save(user1)
         dbService.save(user2)

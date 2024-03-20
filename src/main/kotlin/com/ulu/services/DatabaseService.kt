@@ -1,13 +1,7 @@
 package com.ulu.services
 
-import com.ulu.models.Rating
-import com.ulu.models.Thumb
-import com.ulu.models.UserData
-import com.ulu.models.Whiskey
-import com.ulu.repositories.RatingRepository
-import com.ulu.repositories.ThumbRepository
-import com.ulu.repositories.UserDataRepository
-import com.ulu.repositories.WhiskeyRepository
+import com.ulu.models.*
+import com.ulu.repositories.*
 import jakarta.inject.Singleton
 
 /**
@@ -19,7 +13,8 @@ class DatabaseService(
     private val userDataRepository: UserDataRepository,
     private val whiskeyRepository: WhiskeyRepository,
     private val ratingRepository: RatingRepository,
-    private val thumbRepository: ThumbRepository
+    private val thumbRepository: ThumbRepository,
+    private val labelRepository: LabelRepository
 ) {
     fun <T> save(obj : T) : T {
         if (obj is Whiskey){
@@ -33,6 +28,9 @@ class DatabaseService(
         }
         if (obj is Thumb){
             return thumbRepository.save(obj)
+        }
+        if (obj is Label){
+            return labelRepository.save(obj)
         }
         throw Exception("No repository matching parsed type!")
     }
@@ -50,6 +48,9 @@ class DatabaseService(
         if (obj is Thumb){
             return thumbRepository.delete(obj)
         }
+        if (obj is Label){
+            return labelRepository.delete(obj)
+        }
         throw Exception("No repository matching parsed type!")
     }
 
@@ -66,11 +67,15 @@ class DatabaseService(
         if (obj is Thumb){
             return thumbRepository.existsById(obj.id)
         }
+        if (obj is Label){
+            return labelRepository.existsById(obj.id)
+        }
         throw Exception("No repository matching parsed type!")
     }
 
     fun deleteAll(){
         thumbRepository.deleteAll()
+        labelRepository.deleteAll()
         ratingRepository.deleteAll()
 
         whiskeyRepository.deleteAll()

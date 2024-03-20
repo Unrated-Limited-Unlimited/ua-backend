@@ -3,6 +3,7 @@ package com.ulu.graphql
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT
 import com.ulu.models.Rating
+import com.ulu.models.Thumb
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
 import com.ulu.services.AccountCreationService
@@ -20,14 +21,24 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class ThumbTest(
+    @Client("/") private val client: HttpClient,
+    private val databaseService: DatabaseService,
+) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
+    private var rating2: Rating? = null
+    private var thumb: Thumb? = null
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        user = UserData(
+            name = "John",
+            password = AccountCreationService().hashPassword("321"),
+            email = "test@proton.com",
+            img = "img.txt"
+        )
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
@@ -39,9 +50,18 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         rating =
             Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
+        rating2 =
+            Rating(user = user, whiskey = whiskey, title = "Mid++", body = "This is an in-depth review.", score = 3.0)
+
+        // Like own review rating
+        thumb = Thumb(user = user, rating = rating, isGood = true)
+        user?.thumbs?.add(thumb!!)
+
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
+        databaseService.save(rating2)
+        databaseService.save(thumb)
     }
 
     @AfterEach
@@ -50,67 +70,72 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
     }
 
     @Test
-    fun getLoggedInUserTest() {
-        val query = """ { "query": "{ getLoggedInUser { id, name, img, ratings { whiskey{title}, body } } }" }" """
-        val body = makeRequest(query)
-        assertNotNull(body)
-
-        val userInfo = body["data"] as Map<*, *>
-        println(userInfo.toString())
-        assertTrue(userInfo.containsKey("getLoggedInUser"))
-
-        val loggedInUserMap = userInfo["getLoggedInUser"] as Map<*, *>
-
-        assertEquals(user?.name, loggedInUserMap["name"])
-    }
-
-    @Test
-    fun getUserTest() {
+    fun getThumbTest() {
         val query =
-            """ { "query": "{ getUser(name:\"${user?.name}\") { id, name, img, ratings { whiskey{title}, body } } }" }" """
+            """ { "query": "{ getThumb(ratingId:\"${rating?.id}\") {  id, rating{title},user{name}, isGood  } }" }" """
+        println(query)
         val body = makeRequest(query)
-
         assertNotNull(body)
 
-        val userInfo = body["data"] as Map<*, *>
-        println(userInfo.toString())
-        assertTrue(userInfo.containsKey("getUser"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("getThumb"))
 
-        val getUserMap = userInfo["getUser"] as Map<*, *>
+        val thumbMap = map["getThumb"] as Map<*, *>
+        assertEquals(thumb?.isGood, thumbMap["isGood"])
 
-        assertEquals(user?.name, getUserMap["name"])
+        val whiskeyMap = thumbMap["rating"] as Map<*, *>
+        assertEquals(rating?.title, whiskeyMap["title"])
+
+        val userMap = thumbMap["user"] as Map<*, *>
+        assertEquals(user?.name, userMap["name"])
     }
 
     @Test
-    fun editUserTest() {
+    fun editThumbTest() {
         val query =
-            """ { "query": "mutation{ editUser(user: {email: \"new@email.com\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """
+            """ { "query": "mutation{ editThumb(id:\"${thumb?.id}\", isGood: false) { id, rating{title},user{name}, isGood } }" }" """
+
+        println(query)
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val userInfo = body["data"] as Map<*, *>
-        println(userInfo.toString())
-        assertTrue(userInfo.containsKey("editUser"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("editThumb"))
 
-        val editUserMap = userInfo["editUser"] as Map<*, *>
-        assertEquals("new@email.com", editUserMap["email"])
-
-        // Check that unspecified params are not changed to null
-        assertEquals(user?.img, editUserMap["img"])
-        assertNotNull(editUserMap["img"])
+        val editThumbMap = map["editThumb"] as Map<*, *>
+        assertEquals(false, editThumbMap["isGood"])
     }
 
     @Test
-    fun deleteUserTest() {
-        val query = """ { "query": "mutation{ deleteUser }" } """
+    fun createThumbTest() {
+        val query =
+            """ { "query": "mutation{ createThumb(ratingId: \"${rating2?.id}\", isGood: false) { id, rating{title},user{name}, isGood  } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val deleteUserInfo = body["data"] as Map<*, *>
-        println(deleteUserInfo.toString())
-        assertTrue(deleteUserInfo.containsKey("deleteUser"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("createThumb"))
 
-        assertEquals("deleted", deleteUserInfo["deleteUser"])
+        val editThumbMap = map["createThumb"] as Map<*, *>
+        assertEquals(false, editThumbMap["isGood"])
+    }
+
+    @Test
+    fun deleteThumbTest() {
+        val query = """ { "query": "mutation{ deleteThumb(id: \"${thumb?.id}\") }" } """
+        val body = makeRequest(query)
+
+        assertNotNull(body)
+
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("deleteThumb"))
+        assertEquals("deleted", map["deleteThumb"])
+
+        assertFalse(databaseService.exists(thumb))
     }
 
     private fun getJwtToken(): String {
@@ -133,8 +158,7 @@ class GraphQLUserDataTest(@Client("/") private val client: HttpClient, private v
         val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken())
         val response = client.toBlocking().exchange(
             requestWithAuthorization, Argument.mapOf(
-                String::class.java,
-                Any::class.java
+                String::class.java, Any::class.java
             )
         )
         assertEquals(HttpStatus.OK, response.status)
