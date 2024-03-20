@@ -6,5 +6,6 @@ import io.micronaut.data.jpa.repository.JpaRepository
 
 @Repository
 interface LabelRepository : JpaRepository<Label,Long> {
+    fun existsByName(name: String): Boolean
 
 }

@@ -17,30 +17,26 @@ class LabelFetcher(private val labelRepository: LabelRepository, private val sec
 
     fun createLabel(): DataFetcher<Label> {
         return DataFetcher {
-            if (!securityService.isAuthenticated) {
-                error("Unauthenticated")
-            }
-            if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
-                error("You must be an admin to create new whiskeys")
-            }
+            verifyUserIsAdmin()
             val name : String = it.getArgument("name")
+            if (labelRepository.existsByName(name)){
+                error("Label with identical name already exists")
+            }
             return@DataFetcher labelRepository.save(Label(name=name))
         }
     }
 
     fun editLabel(): DataFetcher<Label> {
         return DataFetcher {
-            if (!securityService.isAuthenticated) {
-                error("Unauthenticated")
-            }
-            if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
-                error("You must be an admin to create new whiskeys")
-            }
+            verifyUserIsAdmin()
             val labelId = it.getArgument<String>("id").toLong()
             val name : String = it.getArgument("name")
             val label = labelRepository.findById(labelId)
             if (label.isEmpty){
                 error("No label with id: $labelId found.")
+            }
+            if (labelRepository.existsByName(name)){
+                error("Label with identical name already exists")
             }
             label.get().name = name
             labelRepository.update(label.get())
@@ -50,15 +46,18 @@ class LabelFetcher(private val labelRepository: LabelRepository, private val sec
 
     fun deleteLabel(): DataFetcher<String> {
         return DataFetcher {
-            if (!securityService.isAuthenticated) {
-                error("Unauthenticated")
-            }
-            if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")) {
-                error("You must be an admin to delete whiskeys")
-            }
+            verifyUserIsAdmin()
             labelRepository.deleteById(it.getArgument("id"))
             return@DataFetcher "deleted"
         }
     }
 
+    private fun verifyUserIsAdmin(){
+        if (!securityService.isAuthenticated) {
+            error("Unauthenticated")
+        }
+        if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
+            error("You must be an admin to create new whiskeys")
+        }
+    }
 }
