@@ -1,12 +1,6 @@
 package com.ulu.models
 
-import jakarta.persistence.CascadeType
-import jakarta.persistence.ElementCollection
-import jakarta.persistence.Entity
-import jakarta.persistence.FetchType
-import jakarta.persistence.GeneratedValue
-import jakarta.persistence.Id
-import jakarta.persistence.OneToMany
+import jakarta.persistence.*
 import java.time.Instant
 
 @Entity
@@ -15,6 +9,7 @@ class UserData(
     @GeneratedValue
     val id: Long? = null,
 
+    @Column(unique = true)
     var name: String,
     var email: String,
     var password: String,
