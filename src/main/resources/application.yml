@@ -3,6 +3,19 @@ micronaut:
     name: unrated
   server:
     port: 8000
+    cors:
+      enabled: true
+      configurations:
+        default:
+          allowedOrigins:
+            - http://localhost:3000
+            - https://unrated.no
+          allowedMethods:
+            - POST
+          allowedHeaders:
+            - Content-Type
+            - Authorization
+          allowCredentials: true
   security:
     token:
       jwt:
