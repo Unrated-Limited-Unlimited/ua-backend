@@ -1,9 +1,9 @@
-package com.ulu.security.controllers
+package com.ulu.controllers
 
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body

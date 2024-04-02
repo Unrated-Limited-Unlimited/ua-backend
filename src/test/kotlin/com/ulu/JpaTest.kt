@@ -7,7 +7,7 @@ import com.ulu.models.UserData
 import com.ulu.models.Whiskey
 import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.WhiskeyRepository
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
@@ -22,12 +22,12 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
             title = "test",
             summary = "Its a test",
             img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
         val rating =
-            Rating(user = userData, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = userData, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
         val thumb = Thumb(user = userData, rating = rating, isGood = true)
 
         // Save
@@ -61,12 +61,12 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
             title = "test",
             summary = "Its a test",
             img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
         val rating =
-            Rating(user = userData, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = userData, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
         // Save
         databaseService.save(userData)

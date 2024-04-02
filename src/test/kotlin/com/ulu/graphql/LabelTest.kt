@@ -2,10 +2,11 @@ package com.ulu.graphql
 
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT
+import com.ulu.models.Label
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
@@ -20,94 +21,108 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class GraphQLWhiskeyTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class LabelTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
+    private var label: Label? = null
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        label = Label(name = "Very Helpful Label")
+
+        user = UserData(
+            name = "John",
+            password = AccountCreationService().hashPassword("321"),
+            email = "test@proton.com",
+            img = "img.txt",
+        )
+        user?.roles?.add("ROLE_ADMIN")
+
         whiskey = Whiskey(
             title = "test",
             summary = "Its a test",
             img = "owl.png",
-            percentage = 99.9f,
-            price = 199f,
-            volume = 10f
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
         )
         rating =
-            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", rating = 2f)
+            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
+        databaseService.save(label)
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
     }
 
+    @AfterEach
+    fun cleanUp(){
+        databaseService.deleteAll()
+    }
+
+
     @Test
-    fun getWhiskeyTest() {
+    fun getLabelTest() {
         val query =
-            """ { "query": "{ getWhiskey(id:\"${whiskey?.id}\") { id, title, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "{ getLabels { id, name } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("getWhiskey"))
+        println(body["data"])
 
-        val whiskeyById = whiskeyInfo["getWhiskey"] as Map<*, *>
+        val ratingMap = body["data"] as Map<*,*>
+        assertTrue(ratingMap.containsKey("getLabels"))
 
-        assertEquals(whiskey?.title, whiskeyById["title"])
-        assertEquals(2.0, whiskeyById["rating"]) // Is calculated from request
-
-        val ratings = whiskeyById["ratings"] as ArrayList<*>
-        val ratingMap = ratings[0] as Map<*, *>
-        val userMap = ratingMap["user"] as Map<*, *>
-        assertNotNull(ratings)
-        assertNotNull(userMap)
-
-        assertEquals(rating?.body, ratingMap["body"])
-        assertEquals(user?.name, userMap["name"])
+        val ratingList = ratingMap["getLabels"] as List<*>
+        println(ratingList)
+        val rating = ratingList[ratingList.size-1] as Map<*, *>
+        assertEquals(label?.name, rating["name"])
+        assertNotNull(rating["id"])
     }
 
     @Test
-    fun editWhiskeyTest() {
+    fun editLabelTest() {
         val query =
-            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ editLabel(id:\"${label?.id}\", name: \"New label name\") { id,name } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("editWhiskey"))
-        assertTrue((whiskeyInfo["editWhiskey"] as Map<*,*>).containsValue("New title"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("editLabel"))
+
+        val editRatingMap = map["editLabel"] as Map<*, *>
+        assertEquals("New label name", editRatingMap["name"])
     }
 
     @Test
-    fun createWhiskeyTest() {
+    fun createRatingTest() {
         val query =
-            """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, rating, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ createLabel(name: \"New label created!\") { id, name } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("createWhiskey"))
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("createLabel"))
 
-        assertTrue((whiskeyInfo["createWhiskey"] as Map<*,*>).containsValue("New Whiskey"))
+        val createRatingMap = map["createLabel"] as Map<*, *>
+        assertEquals("New label created!", createRatingMap["name"])
+        assertNotNull(createRatingMap["id"])
     }
 
     @Test
-    fun deleteWhiskeyTest() {
-        val query = """ { "query": "mutation{ deleteWhiskey(id: \"${whiskey?.id}\") }" } """
+    fun deleteRatingTest() {
+        val query = """ { "query": "mutation{ deleteLabel(id: \"${label?.id}\") }" } """
         val body = makeRequest(query)
 
         assertNotNull(body)
 
-        val whiskeyInfo = body["data"] as Map<*, *>
-        println(whiskeyInfo.toString())
-        assertTrue(whiskeyInfo.containsKey("deleteWhiskey"))
-        assertEquals("deleted", whiskeyInfo["deleteWhiskey"])
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("deleteLabel"))
+        assertEquals("deleted", map["deleteLabel"])
     }
 
     private fun getJwtToken(): String {

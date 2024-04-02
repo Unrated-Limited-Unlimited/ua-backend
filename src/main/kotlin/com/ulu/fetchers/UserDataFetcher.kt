@@ -3,7 +3,7 @@ package com.ulu.fetchers
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
-import com.ulu.security.AccountCreationService
+import com.ulu.services.AccountCreationService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -39,32 +39,30 @@ class UserDataFetcher(
                 error("Unauthorized")
             }
             val editUserMap: Map<*, *> = dataFetchingEnvironment.getArgument("user")
-            val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
+            val username = securityService.authentication.get().name
+            val userData: UserData = userDataRepository.getUserDataByName(username) ?: error("User not found")
+            val accountCreationService = AccountCreationService()
 
-            val newEmail = editUserMap["email"] as String?
-            if (newEmail != null){
-                if (!AccountCreationService().isValidEmail(newEmail)) {
+            editUserMap["email"]?.let { newEmail ->
+                if (!accountCreationService.isValidEmail(newEmail as String)) {
                     error("Invalid email provided.")
                 }
-                user.email = newEmail
+                userData.email = newEmail
             }
 
-            val newPass = editUserMap["password"] as String?
-            if (newPass != null){
-                if (!AccountCreationService().isValidPassword(newPass)) {
+            editUserMap["password"]?.let { newPass ->
+                if (!accountCreationService.isValidPassword(newPass as String)) {
                     error("Password to weak")
                 }
-                user.password = AccountCreationService().hashPassword(newPass)
-            }
-            val newImg = editUserMap["img"] as String?
-            if (newImg != null) {
-                user.img = newImg
+                userData.password = accountCreationService.hashPassword(newPass)
             }
 
+            editUserMap["img"]?.let { newImg ->
+                userData.img = newImg as String
+            }
             // Revoke all issued jwt tokens
-            jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
-
-            return@DataFetcher userDataRepository.update(user)
+            jwtRefreshTokenRepository.updateRevokedByUsername(username, true)
+            return@DataFetcher userDataRepository.update(userData)
         }
     }
 
@@ -74,7 +72,7 @@ class UserDataFetcher(
                 error("Unauthorized")
             }
             val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
-                ?: return@DataFetcher null
+                ?: error("User to delete not found")
             userDataRepository.delete(user)
             return@DataFetcher "deleted"
         }

@@ -1,0 +1,168 @@
+package com.ulu.graphql
+
+import com.nimbusds.jwt.JWTParser
+import com.nimbusds.jwt.SignedJWT
+import com.ulu.models.Rating
+import com.ulu.models.UserData
+import com.ulu.models.Whiskey
+import com.ulu.services.AccountCreationService
+import com.ulu.services.DatabaseService
+import io.micronaut.core.type.Argument
+import io.micronaut.http.HttpRequest
+import io.micronaut.http.HttpResponse
+import io.micronaut.http.HttpStatus
+import io.micronaut.http.client.HttpClient
+import io.micronaut.http.client.annotation.Client
+import io.micronaut.security.authentication.UsernamePasswordCredentials
+import io.micronaut.security.token.render.BearerAccessRefreshToken
+import io.micronaut.test.extensions.junit5.annotation.MicronautTest
+import org.junit.jupiter.api.*
+import org.junit.jupiter.api.Assertions.*
+
+@MicronautTest(environments = ["test"])
+class WhiskeyTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+    private var adminUser: UserData? = null
+    private var user: UserData? = null
+    private var whiskey: Whiskey? = null
+    private var rating: Rating? = null
+
+    @BeforeEach
+    fun setup() {
+        user = UserData(name = "Petra", password = AccountCreationService().hashPassword("111"), email = "testing@proton.com", img = "img.txt")
+        adminUser = UserData(name = "John", password = AccountCreationService().hashPassword("111"), email = "test@proton.com", img = "img.txt")
+        adminUser?.roles?.add("ROLE_ADMIN")
+
+        whiskey = Whiskey(
+            title = "test",
+            summary = "Its a test",
+            img = "owl.png",
+            percentage = 99.9,
+            price = 199.0,
+            volume = 10.0
+        )
+        rating =
+            Rating(user = adminUser, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
+
+        databaseService.save(adminUser)
+        databaseService.save(user)
+        databaseService.save(whiskey)
+        databaseService.save(rating)
+    }
+
+    @AfterEach
+    fun cleanup() {
+        databaseService.deleteAll()
+    }
+
+    @Test
+    fun getWhiskeyTest() {
+        val query =
+            """ { "query": "{ getWhiskey(id:\"${whiskey?.id}\") { id, title, avgScore, ratings { user{name}, body } } }" }" """
+        val body = makeRequest(query, adminUser!!)
+        assertNotNull(body)
+
+        val whiskeyInfo = body["data"] as Map<*, *>
+        println(whiskeyInfo.toString())
+        assertTrue(whiskeyInfo.containsKey("getWhiskey"))
+
+        val whiskeyById = whiskeyInfo["getWhiskey"] as Map<*, *>
+
+        assertEquals(whiskey?.title, whiskeyById["title"])
+        assertEquals(2.0, whiskeyById["avgScore"]) // Is calculated from request
+
+        val ratings = whiskeyById["ratings"] as ArrayList<*>
+        val ratingMap = ratings[0] as Map<*, *>
+        val userMap = ratingMap["user"] as Map<*, *>
+        assertNotNull(ratings)
+        assertNotNull(userMap)
+
+        assertEquals(rating?.body, ratingMap["body"])
+        assertEquals(adminUser?.name, userMap["name"])
+    }
+
+    @Test
+    fun editWhiskeyTest() {
+        val query =
+            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
+        val body = makeRequest(query, adminUser!!)
+        assertNotNull(body)
+
+        val whiskeyInfo = body["data"] as Map<*, *>
+        println(whiskeyInfo.toString())
+        assertTrue(whiskeyInfo.containsKey("editWhiskey"))
+        assertTrue((whiskeyInfo["editWhiskey"] as Map<*,*>).containsValue("New title"))
+    }
+
+    @Test
+    fun createWhiskeyTest() {
+        val query =
+            """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
+        val body = makeRequest(query, adminUser!!)
+        assertNotNull(body)
+
+        val whiskeyInfo = body["data"] as Map<*, *>
+        println(whiskeyInfo.toString())
+        assertTrue(whiskeyInfo.containsKey("createWhiskey"))
+
+        assertTrue((whiskeyInfo["createWhiskey"] as Map<*,*>).containsValue("New Whiskey"))
+    }
+
+    @Test
+    fun nonAdminDeniedCreateWhiskeyTest(){
+        val query =
+            """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
+        val body = makeRequest(query, user!!)
+        assertNotNull(body)
+
+        val whiskeyInfo = body["data"] as Map<*, *>
+        println(whiskeyInfo.toString())
+        assertTrue(whiskeyInfo.containsKey("createWhiskey"))
+        assertTrue(whiskeyInfo.containsValue(null))
+
+        assertTrue(body.containsKey("errors"))
+        val errorInfo = body["errors"] as List<*>
+        assertTrue(errorInfo.isNotEmpty())
+    }
+
+    @Test
+    fun deleteWhiskeyTest() {
+        val query = """ { "query": "mutation{ deleteWhiskey(id: \"${whiskey?.id}\") }" } """
+        val body = makeRequest(query, adminUser!!)
+
+        assertNotNull(body)
+
+        val whiskeyInfo = body["data"] as Map<*, *>
+        println(whiskeyInfo.toString())
+        assertTrue(whiskeyInfo.containsKey("deleteWhiskey"))
+        assertEquals("deleted", whiskeyInfo["deleteWhiskey"])
+    }
+
+    private fun getJwtToken(user: UserData): String {
+        // Login
+        val credentials = UsernamePasswordCredentials(user.name, "111")
+        val request: HttpRequest<*> = HttpRequest.POST("/login", credentials)
+        val rsp: HttpResponse<BearerAccessRefreshToken> =
+            client.toBlocking().exchange(request, BearerAccessRefreshToken::class.java)
+        assertEquals(HttpStatus.OK, rsp.status)
+
+        // Validate token
+        val bearerAccessRefreshToken: BearerAccessRefreshToken = rsp.body()
+        assertTrue(JWTParser.parse(bearerAccessRefreshToken.accessToken) is SignedJWT)
+
+        // return JWT token as global var
+        return bearerAccessRefreshToken.accessToken
+    }
+
+    private fun makeRequest(query: String, user: UserData): Map<String, Any> {
+        val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken(user))
+        val response = client.toBlocking().exchange(
+            requestWithAuthorization, Argument.mapOf(
+                String::class.java,
+                Any::class.java
+            )
+        )
+        assertEquals(HttpStatus.OK, response.status)
+        println(response.body())
+        return response.body()
+    }
+}

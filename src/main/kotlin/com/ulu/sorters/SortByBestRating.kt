@@ -1,4 +1,4 @@
-package com.ulu.sorters;
+package com.ulu.sorters
 
 import com.ulu.models.Whiskey
 
@@ -11,7 +11,7 @@ class SortByBestRating {
         val whiskeyWithRatings = whiskeys.filter { it.ratings.isNotEmpty() } // Remove whiskeys with no ratings
 
         return whiskeyWithRatings.sortedByDescending { whiskey ->
-            val averageRating = whiskey.calculateRating()
+            val averageRating = whiskey.calculateAvgScore()
             val numberOfRatings = whiskey.ratings.size
             averageRating * numberOfRatings // This is the weighting formula, might need tweaking
         }

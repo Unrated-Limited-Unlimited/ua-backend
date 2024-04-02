@@ -1,6 +1,10 @@
 enum SortType{
-    RATING,
-    POPULAR, #etc
+    BEST,
+    PRICE,
+    POPULAR,
+    RANDOM,
+    DEFAULT,
+    #PERSONALIZED # Get "AI" recommended based on user preferences
 }
 
 type Query{
@@ -11,40 +15,38 @@ type Query{
     getThumb(ratingId: ID!) : Thumb # Get own thumb verdict from a rating/review
 
     getWhiskeys(sortType : SortType): [Whiskey]
+
+    getLabels : [Label]
 }
 
 type Mutation{
     editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
     deleteUser : String
 
-    createWhiskey(whiskeyInput : WhiskeyInput) : Whiskey
-    editWhiskey(id: ID!, whiskeyInput : WhiskeyInput) : Whiskey
-    deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
+    createRating(whiskeyId: ID!, ratingInput : RatingInput) : Rating
+    editRating(id: ID!, ratingInput : RatingInput) : Rating
+    deleteRating(id: ID!) : String
 
     createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
     editThumb(id: ID!, isGood: Boolean): Thumb
     deleteThumb(id: ID!) : String
 
-    createRating(whiskeyId: ID!, ratingInput : RatingInput) : Rating
-    editRating(id: ID!, ratingInput : RatingInput) : Rating
-    deleteRating(id: ID!) : String
+    # Requires ROLE_ADMIN
+    createWhiskey(whiskeyInput : WhiskeyInput) : Whiskey
+    editWhiskey(id: ID!, whiskeyInput : WhiskeyInput) : Whiskey
+    deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
 
-    #login(auth : AuthInput) : User                  # Replaced with POST /login
-    #logout(auth : AuthInput) : String               # Replaced with POST /logout
-    #createUser(register : RegisterInput) : User     # Replaced with POST /register
+    # Requires ROLE_ADMIN
+    createLabel(name: String) : Label
+    editLabel(id:ID!, name: String) : Label
+    deleteLabel(id: ID!) : String
 }
 
-# Input forms
-
-#input AuthInput{
-#    username: String!,
-#    password: String!
-#}
-
 input RatingInput{
-    title: String,
+    title: String!,
     body: String,
-    rating: Float,
+    score: Float,
+    labelIds: [ID!]
 }
 
 input EditUserInput{
@@ -54,7 +56,7 @@ input EditUserInput{
 }
 
 input WhiskeyInput{
-    title: String
+    title: String!
     summary: String
     img: String
 
@@ -95,24 +97,22 @@ type Whiskey{
     percentage: Float
 
     ratings: [Rating]
-    rating: Float # Average of all ratings
+    avgScore: Float # Average score of all ratings
 }
 
-# Rating -> Review?
-# Thumb -> Feedback/Vote?
 type Rating{
     id: ID!
     user: User!
     whiskey: Whiskey!
+    labels: [Label]
 
     title: String
     body: String
-    rating: Float
+    score: Float
     createdAt: String
 
     thumbs: [Thumb]
 }
-
 
 type Thumb{
     id: ID!
@@ -120,4 +120,11 @@ type Thumb{
     user: User!
 
     isGood: Boolean
+}
+
+type Label{
+    id: ID!
+    ratings: [Rating]
+
+    name: String
 }

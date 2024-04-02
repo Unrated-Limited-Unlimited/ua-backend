@@ -32,7 +32,6 @@ class RatingFetcher(
             if (!securityService.isAuthenticated){
                 error("Unauthenticated")
             }
-
             val whiskeyId = (environment.getArgument("whiskeyId") as String).toLong()
             val whiskey = whiskeyRepository.findById(whiskeyId)
             if (whiskey.isEmpty) {
@@ -46,7 +45,7 @@ class RatingFetcher(
                     user = userData,
                     whiskey = whiskey.get(),
                     body = ratingInput["body"] as String,
-                    rating = (ratingInput["rating"] as Double).toFloat(),
+                    score = ratingInput["score"] as Double,
                     title = ratingInput["title"] as String
                 )
             )
@@ -56,21 +55,11 @@ class RatingFetcher(
     fun editRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
             val rating = getOwnedRatingById(environment)
-            if (rating.user!!.name != securityService.authentication.get().name) {
-                error("Can't edit someone else's rating")
-            }
             val ratingInput = environment.getArgument("ratingInput") as Map<*, *>
-            val newTitle : String? = ratingInput["title"] as String?
-            if (!newTitle.isNullOrEmpty()){
-                rating.title = newTitle
-            }
-            val newBody =  ratingInput["body"] as String?
-            if (!newBody.isNullOrEmpty()){
-                rating.body = newBody
-            }
-            val newRating = (ratingInput["rating"] as String?)?.toFloat()
-            if (newRating != null) {
-                rating.rating = newRating
+            with(rating){
+                title = ratingInput["title"] as? String ?: title
+                body = ratingInput["body"] as? String ?: body
+                score = ratingInput["score"] as? Double ?: score
             }
             return@DataFetcher ratingRepository.update(rating)
         }
@@ -79,22 +68,23 @@ class RatingFetcher(
     fun deleteRating(): DataFetcher<String> {
         return DataFetcher { environment: DataFetchingEnvironment ->
             val rating = getOwnedRatingById(environment)
-            if (rating.user!!.name != securityService.authentication.get().name) {
-                error("Can't delete someone else's rating")
-            }
             ratingRepository.delete(rating)
             return@DataFetcher "deleted"
         }
     }
 
-    private fun getOwnedRatingById(environment: DataFetchingEnvironment) : Rating{
+    fun getOwnedRatingById(environment: DataFetchingEnvironment, argumentName: String = "id") : Rating {
         if (!securityService.isAuthenticated){
             error("Unauthenticated")
         }
-        val ratingId = (environment.getArgument("id") as String).toLong()
+        val ratingId = (environment.getArgument(argumentName) as String).toLong()
         val rating = ratingRepository.findById(ratingId)
         if (rating.isEmpty) {
             error("No rating with id $ratingId.")
+        }
+        val auth = securityService.authentication.get()
+        if (rating.get().user?.name != auth.name && !auth.roles.contains("ROLE_ADMIN")) {
+            error("Can't change someone else's rating")
         }
         return rating.get()
     }

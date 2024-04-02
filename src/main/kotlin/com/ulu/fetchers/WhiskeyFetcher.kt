@@ -2,6 +2,10 @@ package com.ulu.fetchers
 
 import com.ulu.models.Whiskey
 import com.ulu.repositories.WhiskeyRepository
+import com.ulu.sorters.SortByBestRating
+import com.ulu.sorters.SortByPrice
+import com.ulu.sorters.SortByRandom
+import com.ulu.sorters.SortByTotalRatings
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -13,19 +17,12 @@ class WhiskeyFetcher(
     private val whiskeyRepository: WhiskeyRepository,
     private val securityService: DefaultSecurityService
 ) {
-    private enum class SortType {
-        RATING,
-        POPULAR,
-        //PERSONALIZED | based on users reviews on similar whiskeys
-    }
-
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
             val whiskeyId: String? = dataFetchingEnvironment?.getArgument("id")
-
             if (whiskeyId != null) {
                 val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
-                whiskey.rating = whiskey.calculateRating()
+                whiskey.avgScore = whiskey.calculateAvgScore()
                 return@DataFetcher whiskey
             } else {
                 return@DataFetcher null
@@ -35,21 +32,17 @@ class WhiskeyFetcher(
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
-            val sortType: SortType = dataFetchingEnvironment?.getArgument<String>("sortType").let {
+            val whiskeys = whiskeyRepository.findAll()
+            val sortedWhiskey = dataFetchingEnvironment?.getArgument<String>("sortType").let {
                 when (it) {
-                    "RATING" -> SortType.RATING
-
-                    else -> SortType.POPULAR
+                    "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
+                    "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
+                    "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
+                    "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
+                    else -> whiskeys
                 }
             }
-
-            //TODO Fetch whiskeys based on sortType enum.
-
-            val whiskeys: List<Whiskey> = whiskeyRepository.findAll()
-            whiskeys.forEach { whiskey: Whiskey ->
-                whiskey.rating = whiskey.calculateRating()
-            }
-            return@DataFetcher whiskeys
+            return@DataFetcher sortedWhiskey
         }
     }
 
@@ -58,19 +51,20 @@ class WhiskeyFetcher(
             if (!securityService.isAuthenticated) {
                 error("Unauthenticated")
             }
-            //if (!securityService.authentication.get().roles.contains("admin")){
-            //    error("You must be an admin to create new whiskeys")
-            //}
+            if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
+                error("You must be an admin to edit whiskeys")
+            }
             val whiskeyInput =
                 environment.getArgument("whiskeyInput") as Map<*, *>? ?: error("whiskey input not provided")
             return@DataFetcher whiskeyRepository.save(
                 Whiskey(
                     title = whiskeyInput["title"] as String,
                     img = whiskeyInput["img"] as String,
-                    percentage = (whiskeyInput["percentage"] as Double).toFloat(),
-                    price = (whiskeyInput["price"] as Double).toFloat(),
                     summary = whiskeyInput["summary"] as String,
-                    volume = (whiskeyInput["volume"] as Double).toFloat()
+
+                    percentage = whiskeyInput["percentage"] as Double,
+                    price = whiskeyInput["price"] as Double,
+                    volume = whiskeyInput["volume"] as Double,
                 )
             )
         }
@@ -78,46 +72,45 @@ class WhiskeyFetcher(
 
     fun editWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val whiskey = getOwnedWhiskeyById(environment)
+            if (!securityService.isAuthenticated) {
+                error("Unauthenticated")
+            }
+            if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
+                error("You must be an admin to create new whiskeys")
+            }
+            val whiskey = getWhiskeyByEnvironmentId(environment)
             val whiskeyInput =
                 environment.getArgument("whiskeyInput") as Map<*, *>? ?: error("whiskey input not provided")
+            with(whiskey) {
+                title = whiskeyInput["title"] as? String ?: title
+                img = whiskeyInput["img"] as? String ?: img
+                summary = whiskeyInput["summary"] as? String ?: summary
 
-            (whiskeyInput["title"] as? String)?.let { nonNullTitle ->
-                whiskey.title = nonNullTitle
-            }
-            (whiskeyInput["img"] as? String)?.let { nonNullImg ->
-                whiskey.img = nonNullImg
-            }
-            (whiskeyInput["summary"] as? String)?.let { nonNullSummary ->
-                whiskey.summary = nonNullSummary
+                percentage = whiskeyInput["percentage"] as? Double ?: percentage
+                price = whiskeyInput["price"] as? Double ?: price
+                volume = whiskeyInput["volume"] as? Double ?: volume
             }
 
-            (whiskeyInput["percentage"] as? Double)?.let { nonNullPercentage ->
-                whiskey.percentage = nonNullPercentage.toFloat()
-            }
-            (whiskeyInput["price"] as? Double)?.let { nonNullPrice ->
-                whiskey.price = nonNullPrice.toFloat()
-            }
-            (whiskeyInput["volume"] as? Double)?.let { nonNullVolume ->
-                whiskey.volume = nonNullVolume.toFloat()
-            }
             return@DataFetcher whiskeyRepository.update(whiskey)
         }
     }
 
     fun deleteWhiskey(): DataFetcher<String> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val whiskey = getOwnedWhiskeyById(environment)
+            if (!securityService.isAuthenticated) {
+                error("Unauthenticated")
+            }
+            if (!securityService.authentication.get().roles.contains("ROLE_ADMIN")){
+                error("You must be an admin to delete whiskeys")
+            }
+            val whiskey = getWhiskeyByEnvironmentId(environment)
             whiskey.ratings.clear()
             whiskeyRepository.delete(whiskey)
             return@DataFetcher "deleted"
         }
     }
 
-    private fun getOwnedWhiskeyById(environment : DataFetchingEnvironment) : Whiskey {
-        if (!securityService.isAuthenticated) {
-            error("Unauthenticated")
-        }
+    private fun getWhiskeyByEnvironmentId(environment : DataFetchingEnvironment) : Whiskey {
         val whiskeyId = (environment.getArgument("id") as String).toLong()
         val whiskey = whiskeyRepository.findById(whiskeyId)
         if (whiskey.isEmpty) {

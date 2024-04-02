@@ -2,6 +2,7 @@ package com.ulu.security
 
 import com.ulu.models.UserData
 import com.ulu.repositories.UserDataRepository
+import com.ulu.services.AccountCreationService
 import io.micronaut.http.HttpRequest
 import io.micronaut.security.authentication.*
 import io.micronaut.security.authentication.provider.HttpRequestAuthenticationProvider
@@ -23,7 +24,7 @@ class LoginProvider<B>(private val userDataRepository: UserDataRepository) : Htt
                 userData.password
             )
         ) {
-            AuthenticationResponse.success(authenticationRequest.identity)
+            AuthenticationResponse.success(authenticationRequest.identity, userData.roles)
         } else {
             AuthenticationResponse.failure(AuthenticationFailureReason.CREDENTIALS_DO_NOT_MATCH)
         }

@@ -1,0 +1,7 @@
+datasources:
+  default:
+    url: jdbc:postgresql://localhost:5432/ulu_prod
+    driver-class-name: org.postgresql.Driver
+    username: ulu_backend
+    password: ${DB_PASSWORD:}
+    dialect: POSTGRES

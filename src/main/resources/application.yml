@@ -3,6 +3,20 @@ micronaut:
     name: unrated
   server:
     port: 8000
+    cors:
+      enabled: true
+      configurations:
+        default:
+          allowedOrigins:
+            - http://localhost:3000
+            - https://unrated.no
+            - http://unrated.no
+          allowedMethods:
+            - POST
+          allowedHeaders:
+            - Content-Type
+            - Authorization
+          allowCredentials: true
   security:
     token:
       jwt:
@@ -24,16 +38,14 @@ micronaut:
         enabled: true
       oauth:
         enabled: true
-    intercept-url-map[0]:
-      pattern: /graphql
-      http-method: POST
-      access: isAnonymous()
-    intercept-url-map[1]:
-      pattern: /graphiql
-      http-method: GET
-      access: isAnonymous()
+    intercept-url-map:
+      - pattern: /graphql
+        http-method: POST
+        access: isAnonymous()
 
-
+      - pattern: /graphiql
+        http-method: GET
+        access: isAnonymous()
 
 jpa:
   default:
@@ -41,14 +53,14 @@ jpa:
       hibernate:
         dialect: org.hibernate.dialect.PostgreSQLDialect
         hbm2ddl:
-          auto: update
+          auto: create
       show_sql: false
 
-# <H2 JPA testing
+# Local H2 testing
 datasources:
   default:
-    url: jdbc:postgresql://localhost:5432/ulu_prod
-    driver-class-name: org.postgresql.Driver
+    url: ${JDBC_URL:`jdbc:h2:mem:default;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`}
+    driver-class-name: ${JDBC_DRIVER:org.h2.Driver}
     username: ulu_backend
     password: ${DB_PASSWORD:}
     dialect: POSTGRES
@@ -60,4 +72,3 @@ graphql:
   enabled: true
   graphiql:
     enabled: true
-

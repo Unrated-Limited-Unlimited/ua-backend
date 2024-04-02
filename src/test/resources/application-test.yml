@@ -1,0 +1,60 @@
+micronaut:
+    application:
+        name: unrated
+    server:
+        port: 8001
+    security:
+        token:
+            jwt:
+                signatures:
+                    secret:
+                        generator:
+                            secret: ${JWT_GENERATOR_SIGNATURE_SECRET\:pleaseChangeThisSecretForANewOne}
+                generator:
+                    refresh-token:
+                        secret: ${JWT_GENERATOR_SIGNATURE_SECRET:pleaseChangeThisSecretForANewOne}
+        authentication: bearer
+        refresh:
+            cookie:
+                enabled: true
+        redirect:
+            enabled: false
+        endpoints:
+            login:
+                enabled: true
+            oauth:
+                enabled: true
+        intercept-url-map:
+            - pattern: /graphql
+              http-method: POST
+              access: isAnonymous()
+
+            - pattern: /graphiql
+              http-method: GET
+              access: isAnonymous()
+
+jpa:
+    default:
+        properties:
+            hibernate:
+                dialect: org.hibernate.dialect.PostgreSQLDialect
+                hbm2ddl:
+                    auto: update
+            show_sql: false
+
+# Use H2 for tests:
+datasources:
+    default:
+        url: ${JDBC_URL:`jdbc:h2:mem:default;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE`}
+        driver-class-name: ${JDBC_DRIVER:org.h2.Driver}
+        username: ulu_backend
+        password: ${DB_PASSWORD:}
+        dialect: POSTGRES
+
+jackson:
+    serialization-inclusion: ALWAYS
+
+graphql:
+    enabled: true
+    graphiql:
+        enabled: true
