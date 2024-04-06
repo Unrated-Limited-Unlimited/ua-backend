@@ -21,7 +21,11 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: connect
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "cd ${{ secrets.WORK_DIR }}"
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
+    - name: cd
+      run: |
+        cd ${{ secrets.WORK_DIR }}
+        echo pwd
     - name: update
       run: git checkout main && git pull && exit
     - name: build
