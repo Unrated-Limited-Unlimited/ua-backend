@@ -1,9 +1,8 @@
 package com.ulu.fetchers
 
+import com.ulu.models.Attribute
 import com.ulu.models.Rating
-import com.ulu.repositories.RatingRepository
-import com.ulu.repositories.UserDataRepository
-import com.ulu.repositories.WhiskeyRepository
+import com.ulu.repositories.*
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -15,6 +14,8 @@ class RatingFetcher(
     private val whiskeyRepository: WhiskeyRepository,
     private val userDataRepository: UserDataRepository,
     private val securityService: DefaultSecurityService,
+    private val attributeRepository: AttributeRepository,
+    private val attributeCategoryRepository: AttributeCategoryRepository,
 ) {
     fun getRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
@@ -29,7 +30,7 @@ class RatingFetcher(
 
     fun createRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            if (!securityService.isAuthenticated){
+            if (!securityService.isAuthenticated) {
                 error("Unauthenticated")
             }
             val whiskeyId = (environment.getArgument("whiskeyId") as String).toLong()
@@ -37,30 +38,49 @@ class RatingFetcher(
             if (whiskey.isEmpty) {
                 error("No whiskey with id $whiskeyId.")
             }
-            val ratingInput = environment.getArgument("ratingInput") as Map<*, *>
+            val ratingInput = environment.getArgument("ratingInput") as Map<String, *>
             val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
 
-            return@DataFetcher ratingRepository.save(
-                Rating(
-                    user = userData,
-                    whiskey = whiskey.get(),
-                    body = ratingInput["body"] as String,
-                    score = ratingInput["score"] as Double,
-                    title = ratingInput["title"] as String
-                )
+            // Create the rating
+            val rating = Rating(
+                user = userData,
+                whiskey = whiskey.get(),
+                title = ratingInput["title"] as? String ?: error("Invalid request: rating title is missing"),
+                body = ratingInput["body"] as? String ?: error("Invalid request: rating body is missing"),
+                score = ratingInput["score"] as? Double ?: error("Invalid request: rating score is missing"),
             )
+            ratingRepository.save(rating)
+
+            // Add given attributes to rating
+            val attributeInputs = environment.getArgument("attributeInputs") as List<Map<String, *>>?
+            if (attributeInputs != null){
+                addAttributes(attributeInputs, rating)
+            }
+
+            return@DataFetcher ratingRepository.update(rating)
         }
     }
 
     fun editRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
             val rating = getOwnedRatingById(environment)
-            val ratingInput = environment.getArgument("ratingInput") as Map<*, *>
-            with(rating){
-                title = ratingInput["title"] as? String ?: title
-                body = ratingInput["body"] as? String ?: body
-                score = ratingInput["score"] as? Double ?: score
+            val ratingInput = environment.getArgument("ratingInput") as Map<String, *>?
+            with(rating) {
+                title = ratingInput?.get("title") as? String ?: title
+                body = ratingInput?.get("body") as? String ?: body
+                score = ratingInput?.get("score") as? Double ?: score
             }
+
+            // Update the score to each attribute
+            val attributeInputs = environment.getArgument("attributeInputs") as List<Map<String, *>>?
+
+            // Remove previous attributes from review & add updated ones
+            attributeRepository.deleteAll(rating.attributes)
+            rating.attributes.clear()
+            if (attributeInputs != null) {
+                addAttributes(attributeInputs, rating)
+            }
+
             return@DataFetcher ratingRepository.update(rating)
         }
     }
@@ -74,12 +94,40 @@ class RatingFetcher(
     }
 
     /**
+     * Given a list of maps containing "id" and "score" and a rating:
+     * Create a new Attribute with the given score and AttributeCategory "id".
+     * Only one AttributeCategory can be given a score per rating.
+     * */
+    private fun addAttributes(inputs: List<Map<String,*>>, rating: Rating){
+        val seenIds : MutableList<Long> = mutableListOf()
+        inputs.forEach { attributeInput: Map<String, *> ->
+            // Find category by id
+            val attributeCategoryId = attributeInput["id"] as Long
+            if (seenIds.contains(attributeCategoryId)){
+                error("Can not give same attribute category a score multiple times!")
+            }
+            seenIds.add(attributeCategoryId)
+
+            val attributeCategory = attributeCategoryRepository.findById(attributeCategoryId)
+            if (attributeCategory.isEmpty) {
+                error("No attribute category with id: $attributeCategoryId")
+            }
+
+            // Create a new Attribute and add it to the rating
+            val attributeScore = attributeInput["score"] as Double
+            val attribute = Attribute(category = attributeCategory.get(), rating = rating, score = attributeScore)
+            rating.attributes.add(attribute)
+            attributeRepository.save(attribute)
+        }
+    }
+
+    /**
      * Get a rating using environment id and verify that the user is:
      * - Logged in
      * - Is the owner of the rating or has admin privileges.
      * */
-    fun getOwnedRatingById(environment: DataFetchingEnvironment, argumentName: String = "id") : Rating {
-        if (!securityService.isAuthenticated){
+    fun getOwnedRatingById(environment: DataFetchingEnvironment, argumentName: String = "id"): Rating {
+        if (!securityService.isAuthenticated) {
             error("Unauthenticated")
         }
         val ratingId = (environment.getArgument(argumentName) as String).toLong()

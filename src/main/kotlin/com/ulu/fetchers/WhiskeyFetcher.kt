@@ -19,18 +19,15 @@ class WhiskeyFetcher(
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
-            val whiskeyId: String? = dataFetchingEnvironment?.getArgument("id")
-            if (whiskeyId != null) {
-                val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
+            val whiskeyId: String = dataFetchingEnvironment?.getArgument("id")
+                ?: error("AttributeCategory with identical name already exists")
+            val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
 
-                // Update the average rating scores and attribute scores for the whiskey
-                whiskey.avgScore = whiskey.calculateAvgScore()
-                whiskey.calculateAvgAttributeCategoryScore()
+            // Update the average rating scores and attribute scores for the whiskey
+            whiskey.avgScore = whiskey.calculateAvgScore()
+            whiskey.calculateAvgAttributeCategoryScore()
 
-                return@DataFetcher whiskey
-            } else {
-                return@DataFetcher null
-            }
+            return@DataFetcher whiskey
         }
     }
 

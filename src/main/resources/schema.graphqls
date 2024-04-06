@@ -22,8 +22,8 @@ type Mutation{
     editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
     deleteUser : String
 
-    createRating(whiskeyId: ID!, ratingInput : RatingInput, attributeInput: [AttributeInput]) : Rating
-    editRating(id: ID!, ratingInput : RatingInput, attributeInput: [AttributeInput]) : Rating
+    createRating(whiskeyId: ID!, ratingInput : RatingInput!, attributeInputs: [AttributeInput]) : Rating
+    editRating(id: ID!, ratingInput : RatingInput, attributeInputs: [AttributeInput]) : Rating
     deleteRating(id: ID!) : String
 
     createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
@@ -44,7 +44,7 @@ type Mutation{
 ######################################
 
 input RatingInput{
-    title: String!,
+    title: String,
     body: String,
     score: Float,
 }
