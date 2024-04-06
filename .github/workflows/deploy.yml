@@ -17,17 +17,12 @@ jobs:
       name: ULU
     
     steps:
-    - name: Set up JDK 17
-      uses: actions/setup-java@v2
-      with:
-        java-version: '17'
-        distribution: 'temurin'
     - name: install ssh keys
       run: |
         install -m 600 -D /dev/null ~/.ssh/id_rsa
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: deploy
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "java --version && cd /home/ulu/ULU/ua-backend && git checkout main && git pull && /home/ulu/.sdkman/candidates/gradle/current/bin/gradle build && sudo systemctl restart ua-backend.service && exit"
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export JAVA_HOME=/home/ulu/.sdkman/candidates/java/current && cd /home/ulu/ULU/ua-backend && git checkout main && git pull && ./gradlew build && sudo systemctl restart ua-backend.service && exit"
     - name: cleanup
       run: rm -rf ~/.ssh
