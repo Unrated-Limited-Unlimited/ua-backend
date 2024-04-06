@@ -107,6 +107,8 @@ type Whiskey{
 
     ratings: [Rating]
     avgScore: Float # Average score of all ratings
+
+    categories: [AttributeCategory]
 }
 
 type Rating{

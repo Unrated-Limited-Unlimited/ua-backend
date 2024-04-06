@@ -1,6 +1,7 @@
 package com.ulu.models
 
 import jakarta.persistence.*
+import kotlin.jvm.Transient
 
 @Entity
 class Whiskey(
@@ -19,16 +20,20 @@ class Whiskey(
         orphanRemoval = true
     ) var ratings: MutableList<Rating> = mutableListOf(),
 
-    var avgScore: Double? = 0.0,
+    // Used when serializing to GraphQL
+    @Transient
+    var categories : List<AttributeCategory> = mutableListOf(),
+
+    var avgScore: Double = 0.0,
 ) {
-    fun calculateAvgScore(): Double {
+    fun calculateAvgScore() {
         var totalScore = 0.0
         var count = 0
         this.ratings.forEach { rating: Rating ->
             totalScore += rating.score
             count++
         }
-        return if (count > 0) {
+        avgScore = if (count > 0) {
             (totalScore / count)
         } else {
             0.0

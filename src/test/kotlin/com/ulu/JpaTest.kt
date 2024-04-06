@@ -98,14 +98,17 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
         whiskey.ratings.add(rating1)
         whiskey.ratings.add(rating2)
 
-        assertEquals(whiskey.calculateAvgScore(), 3.5)
+        whiskey.calculateAvgScore()
+        assertEquals(whiskey.avgScore, 3.5)
 
         whiskey.ratings.clear()
-        assertEquals(whiskey.calculateAvgScore(), 0.0)
+        whiskey.calculateAvgScore()
+        assertEquals(whiskey.avgScore, 0.0)
 
         rating1.score = 0.0
         whiskey.ratings.add(rating1)
-        assertEquals(whiskey.calculateAvgScore(), 0.0)
+        whiskey.calculateAvgScore()
+        assertEquals(whiskey.avgScore, 0.0)
     }
 
     @Test

@@ -9,7 +9,7 @@ import jakarta.persistence.*
 class AttributeCategory(
     @Id
     @GeneratedValue
-    val id : Long? = null,
+    val id: Long? = null,
 
     var name: String,
 
@@ -17,4 +17,18 @@ class AttributeCategory(
     val attributes: MutableList<Attribute> = mutableListOf(),
 
     var avgScore: Double = 0.0,
-)
+) {
+    fun calculateAvgScore() {
+        var totalScore = 0.0
+        var count = 0
+        this.attributes.forEach { attribute: Attribute ->
+            totalScore += attribute.score
+            count++
+        }
+        avgScore = if (count > 0) {
+            (totalScore / count)
+        } else {
+            0.0
+        }
+    }
+}
