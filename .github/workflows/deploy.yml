@@ -23,6 +23,6 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: deploy
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export JAVA_HOME=/home/ulu/.sdkman/candidates/java/current && cd /home/ulu/ULU/ua-backend && git checkout main && git pull && ./gradlew build && sudo -S systemctl restart ua-backend.service && echo ${{ secrets.USER_PSWD }} && exit"
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export JAVA_HOME=/home/ulu/.sdkman/candidates/java/current && cd /home/ulu/ULU/ua-backend && git checkout main && git pull && ./gradlew build && echo ${{ secrets.USER_PSWD }} && sudo -S -n systemctl restart ua-backend.service && exit"
     - name: cleanup
       run: rm -rf ~/.ssh
