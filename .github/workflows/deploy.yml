@@ -23,7 +23,8 @@ jobs:
     - name: deploy
       run: |
         ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
-        cd ${{ secrets.WORK_DIR }}
+        ls
+        cd /home/ulu/ULU/ua-backend
         git checkout main && git pull
         ./gradlew build
         sudo systemctl restart ua-backend.service
