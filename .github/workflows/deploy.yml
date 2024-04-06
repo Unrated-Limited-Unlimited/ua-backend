@@ -21,6 +21,7 @@ jobs:
       uses: actions/setup-java@v2
       with:
         java-version: '17'
+        distribution: 'temurin'
     - name: install ssh keys
       run: |
         install -m 600 -D /dev/null ~/.ssh/id_rsa
