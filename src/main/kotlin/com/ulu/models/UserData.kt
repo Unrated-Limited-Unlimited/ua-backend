@@ -16,10 +16,10 @@ class UserData(
     var img: String?,   //Store bytes?
     val createdAt: Instant = Instant.now(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
     val ratings: MutableList<Rating> = mutableListOf(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "user", orphanRemoval = true)
     var thumbs: MutableList<Thumb> = mutableListOf(),
 
     @ElementCollection(fetch = FetchType.EAGER)

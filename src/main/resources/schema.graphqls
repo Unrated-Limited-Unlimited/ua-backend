@@ -15,16 +15,15 @@ type Query{
     getThumb(ratingId: ID!) : Thumb # Get own thumb verdict from a rating/review
 
     getWhiskeys(sortType : SortType): [Whiskey]
-
-    getLabels : [Label]
+    getAttributeCategories : [AttributeCategory]
 }
 
 type Mutation{
     editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
     deleteUser : String
 
-    createRating(whiskeyId: ID!, ratingInput : RatingInput) : Rating
-    editRating(id: ID!, ratingInput : RatingInput) : Rating
+    createRating(whiskeyId: ID!, ratingInput : RatingInput, attributeInput: [AttributeInput]) : Rating
+    editRating(id: ID!, ratingInput : RatingInput, attributeInput: [AttributeInput]) : Rating
     deleteRating(id: ID!) : String
 
     createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
@@ -37,16 +36,24 @@ type Mutation{
     deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
 
     # Requires ROLE_ADMIN
-    createLabel(name: String) : Label
-    editLabel(id:ID!, name: String) : Label
-    deleteLabel(id: ID!) : String
+    createAttributeCategory(name: String) : AttributeCategory
+    editAttributeCategory(id:ID!, name: String) : AttributeCategory
+    deleteAttributeCategory(id: ID!) : String
 }
+
+######################################
 
 input RatingInput{
     title: String!,
     body: String,
     score: Float,
-    labelIds: [ID!]
+}
+
+# Add attributes to reviews by giving attribute category id and a score value.
+# The category IDs can be found from Query::getAttributes()
+input AttributeInput{
+    id: ID!,
+    score: Float!,
 }
 
 input EditUserInput{
@@ -64,6 +71,8 @@ input WhiskeyInput{
     volume: Float
     percentage: Float
 }
+
+######################################
 
 type AuthUser{
     id: ID!
@@ -104,7 +113,7 @@ type Rating{
     id: ID!
     user: User!
     whiskey: Whiskey!
-    labels: [Label]
+    attributes: [Attribute]
 
     title: String
     body: String
@@ -122,9 +131,18 @@ type Thumb{
     isGood: Boolean
 }
 
-type Label{
+type Attribute{
     id: ID!
-    ratings: [Rating]
+    rating: Rating
+    category: AttributeCategory
+
+    score: Float
+}
+
+type AttributeCategory{
+    id: ID!
 
     name: String
+    attributes: [Attribute]
+    avgScore: Float
 }

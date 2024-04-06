@@ -22,7 +22,11 @@ class WhiskeyFetcher(
             val whiskeyId: String? = dataFetchingEnvironment?.getArgument("id")
             if (whiskeyId != null) {
                 val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
+
+                // Update the average rating scores and attribute scores for the whiskey
                 whiskey.avgScore = whiskey.calculateAvgScore()
+                whiskey.calculateAvgAttributeCategoryScore()
+
                 return@DataFetcher whiskey
             } else {
                 return@DataFetcher null

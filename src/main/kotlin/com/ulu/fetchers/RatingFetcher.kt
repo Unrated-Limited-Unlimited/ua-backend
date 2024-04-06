@@ -73,6 +73,11 @@ class RatingFetcher(
         }
     }
 
+    /**
+     * Get a rating using environment id and verify that the user is:
+     * - Logged in
+     * - Is the owner of the rating or has admin privileges.
+     * */
     fun getOwnedRatingById(environment: DataFetchingEnvironment, argumentName: String = "id") : Rating {
         if (!securityService.isAuthenticated){
             error("Unauthenticated")
