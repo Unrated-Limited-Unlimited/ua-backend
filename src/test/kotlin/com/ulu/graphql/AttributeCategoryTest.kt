@@ -2,7 +2,7 @@ package com.ulu.graphql
 
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT
-import com.ulu.models.Label
+import com.ulu.models.AttributeCategory
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
@@ -21,15 +21,15 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class LabelTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class AttributeCategoryTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
-    private var label: Label? = null
+    private var attributeCategory: AttributeCategory? = null
 
     @BeforeEach
     fun setup() {
-        label = Label(name = "Very Helpful Label")
+        attributeCategory = AttributeCategory(name = "Very Helpful Attribute")
 
         user = UserData(
             name = "John",
@@ -50,7 +50,7 @@ class LabelTest(@Client("/") private val client: HttpClient, private val databas
         rating =
             Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
-        databaseService.save(label)
+        databaseService.save(attributeCategory)
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
@@ -63,66 +63,66 @@ class LabelTest(@Client("/") private val client: HttpClient, private val databas
 
 
     @Test
-    fun getLabelTest() {
+    fun getAttributeCategoryTest() {
         val query =
-            """ { "query": "{ getLabels { id, name } }" }" """
+            """ { "query": "{ getAttributeCategories { id, name } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
         println(body["data"])
 
         val ratingMap = body["data"] as Map<*,*>
-        assertTrue(ratingMap.containsKey("getLabels"))
+        assertTrue(ratingMap.containsKey("getAttributeCategories"))
 
-        val ratingList = ratingMap["getLabels"] as List<*>
+        val ratingList = ratingMap["getAttributeCategories"] as List<*>
         println(ratingList)
         val rating = ratingList[ratingList.size-1] as Map<*, *>
-        assertEquals(label?.name, rating["name"])
+        assertEquals(attributeCategory?.name, rating["name"])
         assertNotNull(rating["id"])
     }
 
     @Test
-    fun editLabelTest() {
+    fun editAttributeCategoryTest() {
         val query =
-            """ { "query": "mutation{ editLabel(id:\"${label?.id}\", name: \"New label name\") { id,name } }" }" """
+            """ { "query": "mutation{ editAttributeCategory(id:\"${attributeCategory?.id}\", name: \"New AttributeCategory name\") { id,name } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
         val map = body["data"] as Map<*, *>
         println(map.toString())
-        assertTrue(map.containsKey("editLabel"))
+        assertTrue(map.containsKey("editAttributeCategory"))
 
-        val editRatingMap = map["editLabel"] as Map<*, *>
-        assertEquals("New label name", editRatingMap["name"])
+        val editRatingMap = map["editAttributeCategory"] as Map<*, *>
+        assertEquals("New AttributeCategory name", editRatingMap["name"])
     }
 
     @Test
     fun createRatingTest() {
         val query =
-            """ { "query": "mutation{ createLabel(name: \"New label created!\") { id, name } }" }" """
+            """ { "query": "mutation{ createAttributeCategory(name: \"New AttributeCategory created!\") { id, name } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
         val map = body["data"] as Map<*, *>
         println(map.toString())
-        assertTrue(map.containsKey("createLabel"))
+        assertTrue(map.containsKey("createAttributeCategory"))
 
-        val createRatingMap = map["createLabel"] as Map<*, *>
-        assertEquals("New label created!", createRatingMap["name"])
+        val createRatingMap = map["createAttributeCategory"] as Map<*, *>
+        assertEquals("New AttributeCategory created!", createRatingMap["name"])
         assertNotNull(createRatingMap["id"])
     }
 
     @Test
     fun deleteRatingTest() {
-        val query = """ { "query": "mutation{ deleteLabel(id: \"${label?.id}\") }" } """
+        val query = """ { "query": "mutation{ deleteAttributeCategory(id: \"${attributeCategory?.id}\") }" } """
         val body = makeRequest(query)
 
         assertNotNull(body)
 
         val map = body["data"] as Map<*, *>
         println(map.toString())
-        assertTrue(map.containsKey("deleteLabel"))
-        assertEquals("deleted", map["deleteLabel"])
+        assertTrue(map.containsKey("deleteAttributeCategory"))
+        assertEquals("deleted", map["deleteAttributeCategory"])
     }
 
     private fun getJwtToken(): String {

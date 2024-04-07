@@ -30,7 +30,7 @@ class GraphQLFactory {
         userDataFetcher: UserDataFetcher,
         ratingFetcher: RatingFetcher,
         thumbFetcher: ThumbFetcher,
-        labelFetcher: LabelFetcher
+        attributeCategoryFetcher: AttributeCategoryFetcher
     ): GraphQL {
         val schemaParser = SchemaParser()
 
@@ -119,22 +119,22 @@ class GraphQLFactory {
                         .dataFetcher("deleteThumb", thumbFetcher.deleteThumb())
                 )
 
-                //Label
+                //Attribute Category
                 .type(
                     TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getLabels", labelFetcher.getLabels())
+                        .dataFetcher("getAttributeCategories", attributeCategoryFetcher.getAttributeCategories())
                 )
                 .type(
                     TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("createLabel", labelFetcher.createLabel())
+                        .dataFetcher("createAttributeCategory", attributeCategoryFetcher.createAttributeCategory())
                 )
                 .type(
                     TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("editLabel", labelFetcher.editLabel())
+                        .dataFetcher("editAttributeCategory", attributeCategoryFetcher.editAttributeCategory())
                 )
                 .type(
                     TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("deleteLabel", labelFetcher.deleteLabel())
+                        .dataFetcher("deleteAttributeCategory", attributeCategoryFetcher.deleteAttributeCategory())
                 )
 
                 // Finish/build the schema

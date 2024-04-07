@@ -14,8 +14,11 @@ class DatabaseService(
     private val whiskeyRepository: WhiskeyRepository,
     private val ratingRepository: RatingRepository,
     private val thumbRepository: ThumbRepository,
-    private val labelRepository: LabelRepository
+    private val attributeRepository: AttributeRepository,
+    private val attributeCategoryRepository: AttributeCategoryRepository
 ) {
+    private val noMatchingRepositoryErrorMsg = "No repository matching parsed type!"
+
     fun <T> save(obj : T) : T {
         if (obj is Whiskey){
             return whiskeyRepository.save(obj)
@@ -29,10 +32,13 @@ class DatabaseService(
         if (obj is Thumb){
             return thumbRepository.save(obj)
         }
-        if (obj is Label){
-            return labelRepository.save(obj)
+        if (obj is Attribute){
+            return attributeRepository.save(obj)
         }
-        throw Exception("No repository matching parsed type!")
+        if (obj is AttributeCategory){
+            return attributeCategoryRepository.save(obj)
+        }
+        throw Exception(noMatchingRepositoryErrorMsg)
     }
 
     fun <T> delete(obj : T) {
@@ -48,10 +54,13 @@ class DatabaseService(
         if (obj is Thumb){
             return thumbRepository.delete(obj)
         }
-        if (obj is Label){
-            return labelRepository.delete(obj)
+        if (obj is Attribute){
+            return attributeRepository.delete(obj)
         }
-        throw Exception("No repository matching parsed type!")
+        if (obj is AttributeCategory){
+            return attributeCategoryRepository.delete(obj)
+        }
+        throw Exception(noMatchingRepositoryErrorMsg)
     }
 
     fun <T> exists(obj : T) : Boolean {
@@ -67,15 +76,19 @@ class DatabaseService(
         if (obj is Thumb){
             return thumbRepository.existsById(obj.id)
         }
-        if (obj is Label){
-            return labelRepository.existsById(obj.id)
+        if (obj is Attribute){
+            return attributeRepository.existsById(obj.id)
         }
-        throw Exception("No repository matching parsed type!")
+        if (obj is AttributeCategory){
+            return attributeCategoryRepository.existsById(obj.id)
+        }
+        throw Exception(noMatchingRepositoryErrorMsg)
     }
 
     fun deleteAll(){
         thumbRepository.deleteAll()
-        labelRepository.deleteAll()
+        attributeRepository.deleteAll()
+        attributeCategoryRepository.deleteAll()
         ratingRepository.deleteAll()
 
         whiskeyRepository.deleteAll()

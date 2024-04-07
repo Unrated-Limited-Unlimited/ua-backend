@@ -1,6 +1,8 @@
 package com.ulu.fetchers
 
+import com.ulu.models.AttributeCategory
 import com.ulu.models.Whiskey
+import com.ulu.repositories.AttributeCategoryRepository
 import com.ulu.repositories.WhiskeyRepository
 import com.ulu.sorters.SortByBestRating
 import com.ulu.sorters.SortByPrice
@@ -15,24 +17,39 @@ import jakarta.inject.Singleton
 @Singleton
 class WhiskeyFetcher(
     private val whiskeyRepository: WhiskeyRepository,
-    private val securityService: DefaultSecurityService
+    private val attributeCategoryRepository: AttributeCategoryRepository,
+    private val securityService: DefaultSecurityService,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
-            val whiskeyId: String? = dataFetchingEnvironment?.getArgument("id")
-            if (whiskeyId != null) {
-                val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
-                whiskey.avgScore = whiskey.calculateAvgScore()
-                return@DataFetcher whiskey
-            } else {
-                return@DataFetcher null
-            }
+            val whiskeyId: String = dataFetchingEnvironment?.getArgument("id")
+                ?: error("AttributeCategory with identical name already exists")
+            val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
+
+            // Update the average rating scores and attribute scores for the whiskey
+            whiskey.calculateAvgScore()
+            whiskey.categories = attributeCategoryRepository.findByWhiskeyId(whiskey.id!!)
+            whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
+            whiskey.calculateAvgAttributeCategoryScore()
+
+            return@DataFetcher whiskey
         }
     }
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
             val whiskeys = whiskeyRepository.findAll()
+
+            // Update the average rating scores and attribute scores for the whiskey
+            whiskeys.forEach{
+                it.calculateAvgScore()
+
+                it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!)
+                it.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
+
+                it.calculateAvgAttributeCategoryScore()
+            }
+
             val sortedWhiskey = dataFetchingEnvironment?.getArgument<String>("sortType").let {
                 when (it) {
                     "BEST" -> SortByBestRating().sortWhiskey(whiskeys)

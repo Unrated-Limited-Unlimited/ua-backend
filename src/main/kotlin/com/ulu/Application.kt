@@ -34,8 +34,9 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         if (userDataRepository.getUserDataByName("Jeff") != null){
             return
         }
-        val label1 = Label(name = "Good")
-        val label2 = Label(name = "Bad")
+        // Add some silly attribute test categories
+        val attributeCategory1 = AttributeCategory(name = "Time Travel Capability")
+        val attributeCategory2 = AttributeCategory(name = "Conversation Starter Level")
 
         // Add test users
         val user1 = UserData(name = "Jeff", email = "jeff@bank.no", password = AccountCreationService().hashPassword("123"), img = "www.test.com/1.png")
@@ -56,12 +57,14 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         // Like review
         val thumb1 = Thumb(user = user1, rating = rating1, isGood = true)
 
-        rating1.addLabel(label1)
-        rating2.addLabel(label1)
-        rating2.addLabel(label2)
+        // Add attribute scores to review
+        val attribute1 = Attribute(rating = rating2, category = attributeCategory1, score = 2.0)
+        val attribute2 = Attribute(rating = rating2, category = attributeCategory2, score = 2.0)
+        val attribute3 = Attribute(rating = rating3, category = attributeCategory2, score = 3.14)
 
-        dbService.save(label1)
-        dbService.save(label2)
+        // Save created test objects
+        dbService.save(attributeCategory1)
+        dbService.save(attributeCategory2)
 
         dbService.save(user1)
         dbService.save(user2)
@@ -74,5 +77,9 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         dbService.save(rating3)
 
         dbService.save(thumb1)
+
+        dbService.save(attribute1)
+        dbService.save(attribute2)
+        dbService.save(attribute3)
     }
 }

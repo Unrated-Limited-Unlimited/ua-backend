@@ -11,9 +11,9 @@ class SortByBestRating {
         val whiskeyWithRatings = whiskeys.filter { it.ratings.isNotEmpty() } // Remove whiskeys with no ratings
 
         return whiskeyWithRatings.sortedByDescending { whiskey ->
-            val averageRating = whiskey.calculateAvgScore()
+            whiskey.calculateAvgScore()
             val numberOfRatings = whiskey.ratings.size
-            averageRating * numberOfRatings // This is the weighting formula, might need tweaking
+            whiskey.avgScore * numberOfRatings // This is the weighting formula, might need tweaking
         }
     }
 }

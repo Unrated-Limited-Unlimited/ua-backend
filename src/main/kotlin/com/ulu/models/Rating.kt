@@ -21,19 +21,9 @@ class Rating(
     var score: Double,
     val createdAt: Instant = Instant.now(),
 
-    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", orphanRemoval = true)
     var thumbs: MutableList<Thumb> = mutableListOf(),
 
-    @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "rating_label",
-        joinColumns = [JoinColumn(name = "rating_id")],
-        inverseJoinColumns = [JoinColumn(name = "label_id")]
-    )
-    var labels: MutableList<Label> = mutableListOf(),
-){
-    fun addLabel(label: Label){
-        this.labels.add(label)
-        label.ratings.add(this)
-    }
-}
+    @OneToMany(fetch = FetchType.EAGER, mappedBy = "rating", orphanRemoval = true)
+    var attributes: MutableList<Attribute> = mutableListOf()
+)
