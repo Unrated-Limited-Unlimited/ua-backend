@@ -16,7 +16,14 @@ micronaut:
           allowedHeaders:
             - Content-Type
             - Authorization
-          allowCredentials: true
+          allowCredentials:
+            true
+          allowedPaths:
+            - "/oauth/access_token"
+            - "/login"
+            - "/logout"
+            - "/register"
+            - "/graphql"
   security:
     token:
       jwt:

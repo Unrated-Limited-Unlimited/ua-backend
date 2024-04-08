@@ -8,7 +8,7 @@ import jakarta.inject.Singleton
  *
  * Random salt will be added to the passwords internally by BCrypt.
  * */
-private const val MIN_PASSWORD_LENGTH = 10
+private const val MIN_PASSWORD_LENGTH = 8
 @Singleton
 class AccountCreationService {
 
