@@ -2,6 +2,7 @@ package com.ulu.graphql
 
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT
+import com.ulu.models.AttributeCategory
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
@@ -24,6 +25,7 @@ class RatingTest(@Client("/") private val client: HttpClient, private val databa
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
+    private var attributeCategory: AttributeCategory? = null
 
     @BeforeEach
     fun setup() {
@@ -44,9 +46,12 @@ class RatingTest(@Client("/") private val client: HttpClient, private val databa
         rating =
             Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
+        attributeCategory = AttributeCategory(name = "Epic Level")
+
         databaseService.save(user)
         databaseService.save(whiskey)
         databaseService.save(rating)
+        databaseService.save(attributeCategory)
     }
 
     @AfterEach
@@ -107,6 +112,23 @@ class RatingTest(@Client("/") private val client: HttpClient, private val databa
         val createRatingMap = map["createRating"] as Map<*, *>
         assertEquals("New rating of whiskey!", createRatingMap["title"])
         assertEquals(5.0, createRatingMap["score"])
+    }
+
+    @Test
+    fun createRatingWithAttributesTest() {
+        val query =
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 1.0 }, attributeInputs: [{id: ${attributeCategory?.id}, score: 0.4}]) { id, title, body, score, attributes{score} } }" }" """
+        val body = makeRequest(query)
+        assertNotNull(body)
+
+        val map = body["data"] as Map<*, *>
+        println(map.toString())
+        assertTrue(map.containsKey("createRating"))
+
+        val createRatingMap = map["createRating"] as Map<*, *>
+        assertEquals("New rating of whiskey!", createRatingMap["title"])
+        assertEquals(1.0, createRatingMap["score"])
+        assertEquals(0.4, ((createRatingMap["attributes"] as List<*>)[0] as Map<*,*>)["score"])
     }
 
     @Test

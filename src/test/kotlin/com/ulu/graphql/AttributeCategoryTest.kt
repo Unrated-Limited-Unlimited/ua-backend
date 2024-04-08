@@ -97,7 +97,7 @@ class AttributeCategoryTest(@Client("/") private val client: HttpClient, private
     }
 
     @Test
-    fun createRatingTest() {
+    fun createAttributeCategoryTest() {
         val query =
             """ { "query": "mutation{ createAttributeCategory(name: \"New AttributeCategory created!\") { id, name } }" }" """
         val body = makeRequest(query)
@@ -113,7 +113,7 @@ class AttributeCategoryTest(@Client("/") private val client: HttpClient, private
     }
 
     @Test
-    fun deleteRatingTest() {
+    fun deleteAttributeCategoryTest() {
         val query = """ { "query": "mutation{ deleteAttributeCategory(id: \"${attributeCategory?.id}\") }" } """
         val body = makeRequest(query)
 
