@@ -102,7 +102,7 @@ class RatingFetcher(
         val seenIds : MutableList<Long> = mutableListOf()
         inputs.forEach { attributeInput: Map<String, *> ->
             // Find category by id
-            val attributeCategoryId = attributeInput["id"] as Long
+            val attributeCategoryId = (attributeInput["id"] as String).toLong()
             if (seenIds.contains(attributeCategoryId)){
                 error("Can not give same attribute category a score multiple times!")
             }
