@@ -113,8 +113,13 @@ class RatingFetcher(
                 error("No attribute category with id: $attributeCategoryId")
             }
 
-            // Create a new Attribute and add it to the rating
+            // Verify that score is within bounds
             val attributeScore = attributeInput["score"] as Double
+            if (attributeScore < 0 || attributeScore > 1.0){
+                 error("Invalid attribute score range.")
+            }
+            
+            // Create a new Attribute and add it to the rating
             val attribute = Attribute(category = attributeCategory.get(), rating = rating, score = attributeScore)
             rating.attributes.add(attribute)
             attributeRepository.save(attribute)
