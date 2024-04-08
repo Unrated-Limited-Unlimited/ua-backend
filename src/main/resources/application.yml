@@ -12,6 +12,7 @@ micronaut:
             - https://unrated.no
             - http://unrated.no
           allowedMethods:
+            - OPTIONS
             - POST
           allowedHeaders:
             - Content-Type
