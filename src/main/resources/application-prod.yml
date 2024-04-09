@@ -5,3 +5,5 @@ datasources:
     username: ulu_backend
     password: ${DB_PASSWORD:}
     dialect: POSTGRES
+    hbm2ddl:
+      auto: update
