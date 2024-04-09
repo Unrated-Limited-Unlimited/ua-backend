@@ -5,6 +5,7 @@ import com.ulu.repositories.UserDataRepository
 import com.ulu.services.AccountCreationService
 import com.ulu.services.DatabaseService
 import io.micronaut.context.annotation.Requires
+import io.micronaut.context.annotation.Value
 import io.micronaut.context.event.StartupEvent
 import io.micronaut.runtime.Micronaut.run
 import io.micronaut.runtime.event.annotation.EventListener
@@ -27,6 +28,8 @@ fun main(args: Array<String>) {
 
 @Singleton
 class TestDataCreator(private val dbService: DatabaseService, private val userDataRepository: UserDataRepository) {
+    @Value("\${ADMIN_PASS:undefined}")
+    lateinit var adminPass : String
 
     @EventListener
     @Requires(notEnv = ["prod"])
@@ -81,5 +84,19 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         dbService.save(attribute1)
         dbService.save(attribute2)
         dbService.save(attribute3)
+    }
+
+    @EventListener
+    @Requires(env = ["prod"])
+    fun onProdStartup(event: StartupEvent) {
+        if (userDataRepository.getUserDataByName("ADMIN") != null) {
+            return
+        }
+        if (adminPass == "undefined"){
+            error("Could not find environment variable: ADMIN_PASS")
+        }
+        val adminUser = UserData(name = "ADMIN", email = "admin@email.com", password = AccountCreationService().hashPassword(adminPass), img = "ADMIN")
+        adminUser.roles.add("ROLE_ADMIN")
+        dbService.save(adminUser)
     }
 }

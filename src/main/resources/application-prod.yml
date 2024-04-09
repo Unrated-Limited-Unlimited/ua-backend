@@ -1,3 +1,10 @@
+jpa:
+  default:
+    properties:
+      hibernate:
+        hbm2ddl:
+          auto: update
+
 datasources:
   default:
     url: jdbc:postgresql://localhost:5432/ulu_prod
@@ -5,5 +12,3 @@ datasources:
     username: ulu_backend
     password: ${DB_PASSWORD:}
     dialect: POSTGRES
-    hbm2ddl:
-      auto: update
