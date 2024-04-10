@@ -4,6 +4,7 @@ import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
 import com.ulu.services.AccountCreationService
+import com.ulu.services.RequestValidatorService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -13,9 +14,8 @@ import jakarta.inject.Singleton
 class UserDataFetcher(
     private val userDataRepository: UserDataRepository,
     private val securityService: DefaultSecurityService,
-    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository
+    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository,
 ) {
-
     fun getUser(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
             val userName: String = dataFetchingEnvironment.getArgument("name")
@@ -25,19 +25,15 @@ class UserDataFetcher(
 
     fun getLoggedInUser(): DataFetcher<UserData> {
         return DataFetcher {
-            if (!securityService.isAuthenticated) {
-                error("Unauthenticated")
-            }
+            RequestValidatorService().verifyAuthenticated(securityService)
             return@DataFetcher userDataRepository.getUserDataByName(securityService.authentication.get().name)
-
         }
     }
 
     fun editUser(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
-            if (!securityService.isAuthenticated) {
-                error("Unauthorized")
-            }
+            RequestValidatorService().verifyAuthenticated(securityService)
+
             val editUserMap: Map<*, *> = dataFetchingEnvironment.getArgument("user")
             val username = securityService.authentication.get().name
             val userData: UserData = userDataRepository.getUserDataByName(username) ?: error("User not found")
@@ -68,11 +64,11 @@ class UserDataFetcher(
 
     fun deleteUser(): DataFetcher<String> {
         return DataFetcher {
-            if (!securityService.isAuthenticated) {
-                error("Unauthorized")
-            }
-            val user: UserData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
-                ?: error("User to delete not found")
+            RequestValidatorService().verifyAuthenticated(securityService)
+
+            val user: UserData =
+                userDataRepository.getUserDataByName(securityService.authentication.get().name)
+                    ?: error("User to delete not found")
             userDataRepository.delete(user)
             return@DataFetcher "deleted"
         }

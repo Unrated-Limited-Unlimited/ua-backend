@@ -3,6 +3,7 @@ package com.ulu.fetchers
 import com.ulu.models.Attribute
 import com.ulu.models.Rating
 import com.ulu.repositories.*
+import com.ulu.services.RequestValidatorService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -30,9 +31,8 @@ class RatingFetcher(
 
     fun createRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            if (!securityService.isAuthenticated) {
-                error("Unauthenticated")
-            }
+            RequestValidatorService().verifyAuthenticated(securityService)
+
             val whiskeyId = (environment.getArgument("whiskeyId") as String).toLong()
             val whiskey = whiskeyRepository.findById(whiskeyId)
             if (whiskey.isEmpty) {
@@ -42,18 +42,24 @@ class RatingFetcher(
             val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
 
             // Create the rating
-            val rating = Rating(
-                user = userData,
-                whiskey = whiskey.get(),
-                title = ratingInput["title"] as? String ?: error("Invalid request: rating title is missing"),
-                body = ratingInput["body"] as? String ?: error("Invalid request: rating body is missing"),
-                score = ratingInput["score"] as? Double ?: error("Invalid request: rating score is missing"),
-            )
+            val rating =
+                Rating(
+                    user = userData,
+                    whiskey = whiskey.get(),
+                    title = ratingInput["title"] as? String ?: error("Invalid request: rating title is missing"),
+                    body = ratingInput["body"] as? String ?: error("Invalid request: rating body is missing"),
+                    score = ratingInput["score"] as? Double ?: error("Invalid request: rating score is missing"),
+                )
+            // Validate input
+            RequestValidatorService().verifyScoreRange(rating.score)
+            RequestValidatorService().verifyMinLength(rating.title)
+            RequestValidatorService().verifyMinLength(rating.body, 0)
+
             ratingRepository.save(rating)
 
             // Add given attributes to rating
             val attributeInputs = environment.getArgument("attributeInputs") as List<Map<String, *>>?
-            if (attributeInputs != null){
+            if (attributeInputs != null) {
                 addAttributes(attributeInputs, rating)
             }
 
@@ -71,16 +77,20 @@ class RatingFetcher(
                 score = ratingInput?.get("score") as? Double ?: score
             }
 
-            // Update the score to each attribute
-            val attributeInputs = environment.getArgument("attributeInputs") as List<Map<String, *>>?
+            // Validate input
+            RequestValidatorService().verifyScoreRange(rating.score)
+            RequestValidatorService().verifyMinLength(rating.title)
+            RequestValidatorService().verifyMinLength(rating.body, 0)
 
             // Remove previous attributes from review & add updated ones
             attributeRepository.deleteAll(rating.attributes)
             rating.attributes.clear()
+
+            // Update the score to each attribute
+            val attributeInputs = environment.getArgument("attributeInputs") as List<Map<String, *>>?
             if (attributeInputs != null) {
                 addAttributes(attributeInputs, rating)
             }
-
             return@DataFetcher ratingRepository.update(rating)
         }
     }
@@ -98,12 +108,15 @@ class RatingFetcher(
      * Create a new Attribute with the given score and AttributeCategory "id".
      * Only one AttributeCategory can be given a score per rating.
      * */
-    private fun addAttributes(inputs: List<Map<String,*>>, rating: Rating){
-        val seenIds : MutableList<Long> = mutableListOf()
+    private fun addAttributes(
+        inputs: List<Map<String, *>>,
+        rating: Rating,
+    ) {
+        val seenIds: MutableList<Long> = mutableListOf()
         inputs.forEach { attributeInput: Map<String, *> ->
             // Find category by id
             val attributeCategoryId = (attributeInput["id"] as String).toLong()
-            if (seenIds.contains(attributeCategoryId)){
+            if (seenIds.contains(attributeCategoryId)) {
                 error("Can not give same attribute category a score multiple times!")
             }
             seenIds.add(attributeCategoryId)
@@ -115,10 +128,8 @@ class RatingFetcher(
 
             // Verify that score is within bounds
             val attributeScore = attributeInput["score"] as Double
-            if (attributeScore < 0 || attributeScore > 1.0){
-                 error("Invalid attribute score range.")
-            }
-            
+            RequestValidatorService().verifyScoreRange(attributeScore)
+
             // Create a new Attribute and add it to the rating
             val attribute = Attribute(category = attributeCategory.get(), rating = rating, score = attributeScore)
             rating.attributes.add(attribute)
@@ -131,20 +142,21 @@ class RatingFetcher(
      * - Logged in
      * - Is the owner of the rating or has admin privileges.
      * */
-    fun getOwnedRatingById(environment: DataFetchingEnvironment, argumentName: String = "id"): Rating {
-        if (!securityService.isAuthenticated) {
-            error("Unauthenticated")
-        }
+    fun getOwnedRatingById(
+        environment: DataFetchingEnvironment,
+        argumentName: String = "id",
+    ): Rating {
+        RequestValidatorService().verifyAuthenticated(securityService)
+
         val ratingId = (environment.getArgument(argumentName) as String).toLong()
         val rating = ratingRepository.findById(ratingId)
         if (rating.isEmpty) {
             error("No rating with id $ratingId.")
         }
         val auth = securityService.authentication.get()
-        if (rating.get().user?.name != auth.name && !auth.roles.contains("ROLE_ADMIN")) {
+        if (rating.get().user?.name != auth.name && !RequestValidatorService().isAdmin(securityService)) {
             error("Can't change someone else's rating")
         }
         return rating.get()
     }
-
 }
