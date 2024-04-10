@@ -14,27 +14,27 @@ import io.swagger.v3.oas.annotations.info.*
 import jakarta.inject.Singleton
 
 @OpenAPIDefinition(
-    info = Info(
+    info =
+        Info(
             title = "unrated",
-            version = "0.0"
-    )
+            version = "0.0",
+        ),
 )
-object Api {
-}
-fun main(args: Array<String>) {
-	run(*args)
-}
+object Api
 
+fun main(args: Array<String>) {
+    run(*args)
+}
 
 @Singleton
 class TestDataCreator(private val dbService: DatabaseService, private val userDataRepository: UserDataRepository) {
     @Value("\${ADMIN_PASS:undefined}")
-    lateinit var adminPass : String
+    lateinit var adminPass: String
 
     @EventListener
     @Requires(notEnv = ["prod"])
     fun onStartup(event: StartupEvent) {
-        if (userDataRepository.getUserDataByName("Jeff") != null){
+        if (userDataRepository.getUserDataByName("Jeff") != null) {
             return
         }
         // Add some silly attribute test categories
@@ -42,28 +42,42 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         val attributeCategory2 = AttributeCategory(name = "Conversation Starter Level")
 
         // Add test users
-        val user1 = UserData(name = "Jeff", email = "jeff@bank.no", password = AccountCreationService().hashPassword("123"), img = "www.test.com/1.png")
-        val user2 = UserData(name = "Paul", email = "pauling@gmail.com", password = AccountCreationService().hashPassword("42"), img = "www.test.com/2.png")
+        val user1 =
+            UserData(
+                name = "Jeff",
+                email = "jeff@bank.no",
+                password = AccountCreationService().hashPassword("123"),
+                img = "www.test.com/1.png",
+            )
+        val user2 =
+            UserData(
+                name = "Paul",
+                email = "pauling@gmail.com",
+                password = AccountCreationService().hashPassword("42"),
+                img = "www.test.com/2.png",
+            )
 
         // Make user1 admin, so he can edit/create whiskeys/labels/ratings.
         user1.roles.add("ROLE_ADMIN")
 
         // Add whiskey products
-        val whiskey1 = Whiskey(img = "test.com/img", title = "Test", price = 199.6, summary = "its a whiskey", volume = 1.5, percentage = 99.9)
-        val whiskey2 = Whiskey(img = "test2.com/img", title = "Test2", price = 5.0, summary = "it is another whiskey", volume = 0.4, percentage = 21.0)
+        val whiskey1 =
+            Whiskey(img = "test.com/img", title = "Test", price = 199.6, summary = "its a whiskey", volume = 1.5, percentage = 99.9)
+        val whiskey2 =
+            Whiskey(img = "test2.com/img", title = "Test2", price = 5.0, summary = "it is another whiskey", volume = 0.4, percentage = 21.0)
 
         // Create ratings
-        val rating1 = Rating(body = "test", score = 3.0, title = "its drinkable", user = user1, whiskey = whiskey1)
-        val rating2 = Rating(body = "test", score = 1.0, title = "its not drinkable", user = user2, whiskey = whiskey2)
-        val rating3 = Rating(body = "test", score = 4.0, title = "its amazing", user = user1, whiskey = whiskey2)
+        val rating1 = Rating(body = "test", score = 0.1, title = "its drinkable", user = user1, whiskey = whiskey1)
+        val rating2 = Rating(body = "test", score = 0.2, title = "its not drinkable", user = user2, whiskey = whiskey2)
+        val rating3 = Rating(body = "test", score = 0.8, title = "its amazing", user = user1, whiskey = whiskey2)
 
         // Like review
         val thumb1 = Thumb(user = user1, rating = rating1, isGood = true)
 
         // Add attribute scores to review
-        val attribute1 = Attribute(rating = rating2, category = attributeCategory1, score = 2.0)
-        val attribute2 = Attribute(rating = rating2, category = attributeCategory2, score = 2.0)
-        val attribute3 = Attribute(rating = rating3, category = attributeCategory2, score = 3.14)
+        val attribute1 = Attribute(rating = rating2, category = attributeCategory1, score = 0.2)
+        val attribute2 = Attribute(rating = rating2, category = attributeCategory2, score = 0.4)
+        val attribute3 = Attribute(rating = rating3, category = attributeCategory2, score = 0.8)
 
         // Save created test objects
         dbService.save(attributeCategory1)
@@ -92,10 +106,11 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
         if (userDataRepository.getUserDataByName("ADMIN") != null) {
             return
         }
-        if (adminPass == "undefined"){
+        if (adminPass == "undefined") {
             error("Could not find environment variable: ADMIN_PASS")
         }
-        val adminUser = UserData(name = "ADMIN", email = "admin@email.com", password = AccountCreationService().hashPassword(adminPass), img = "ADMIN")
+        val adminUser =
+            UserData(name = "ADMIN", email = "admin@email.com", password = AccountCreationService().hashPassword(adminPass), img = "ADMIN")
         adminUser.roles.add("ROLE_ADMIN")
         dbService.save(adminUser)
     }

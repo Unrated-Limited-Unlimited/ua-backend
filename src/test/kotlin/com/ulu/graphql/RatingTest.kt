@@ -105,7 +105,7 @@ class RatingTest(
     @Test
     fun createRatingTest() {
         val query =
-            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 5 }) { id, title, body, score } }" }" """
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 0.4 }) { id, title, body, score } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -115,7 +115,7 @@ class RatingTest(
 
         val createRatingMap = map["createRating"] as Map<*, *>
         assertEquals("New rating of whiskey!", createRatingMap["title"])
-        assertEquals(5.0, createRatingMap["score"])
+        assertEquals(0.4, createRatingMap["score"])
     }
 
     @Test
