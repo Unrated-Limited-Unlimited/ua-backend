@@ -22,6 +22,9 @@ type Query{
     # Get a list of whiskeys based on sortType seperated by paging: {page: 0, size: 10}
     getWhiskeys(sortType : SortType, paging: Paging): [Whiskey]
 
+    # Get a list of users that match the query name
+    getUsers(name: String!, paging: Paging) : [User]
+
     # Get all created attribute categories
     getAttributeCategories : [AttributeCategory]
 }

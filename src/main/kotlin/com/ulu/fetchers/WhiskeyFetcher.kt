@@ -11,7 +11,6 @@ import com.ulu.sorters.SortByRandom
 import com.ulu.sorters.SortByTotalRatings
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
-import io.micronaut.data.model.Pageable
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
 
@@ -40,18 +39,8 @@ class WhiskeyFetcher(
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
-            var page = 0
-            var size = 10
-
-            // Get page and size from input
-            val pagingInput = dataFetchingEnvironment.getArgument<Map<*, *>>("paging")
-            if (pagingInput != null) {
-                page = pagingInput["page"] as Int
-                size = pagingInput["size"] as Int
-            }
-
             // Find whiskeys using paging
-            val whiskeys: List<Whiskey> = whiskeyRepository.listAll(Pageable.from(page, size)).content
+            val whiskeys: List<Whiskey> = whiskeyRepository.listAll(RequestValidatorService().getPaging(dataFetchingEnvironment)).content
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
