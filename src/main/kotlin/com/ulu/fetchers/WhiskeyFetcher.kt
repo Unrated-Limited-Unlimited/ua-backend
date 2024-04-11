@@ -11,6 +11,7 @@ import com.ulu.sorters.SortByRandom
 import com.ulu.sorters.SortByTotalRatings
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
+import io.micronaut.data.model.Pageable
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
 
@@ -21,9 +22,9 @@ class WhiskeyFetcher(
     private val securityService: DefaultSecurityService,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
-        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
+        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
             val whiskeyId: String =
-                dataFetchingEnvironment?.getArgument("id")
+                dataFetchingEnvironment.getArgument("id")
                     ?: error("AttributeCategory with identical name already exists")
             val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
 
@@ -38,21 +39,30 @@ class WhiskeyFetcher(
     }
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
-        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
-            val whiskeys = whiskeyRepository.findAll()
+        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
+            var page = 0
+            var size = 10
+
+            // Get page and size from input
+            val pagingInput = dataFetchingEnvironment.getArgument<Map<*, *>>("paging")
+            if (pagingInput != null) {
+                page = pagingInput["page"] as Int
+                size = pagingInput["size"] as Int
+            }
+
+            // Find whiskeys using paging
+            val whiskeys: List<Whiskey> = whiskeyRepository.listAll(Pageable.from(page, size)).content
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
                 it.calculateAvgScore()
-
                 it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!)
                 it.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
-
                 it.calculateAvgAttributeCategoryScore()
             }
 
             val sortedWhiskey =
-                dataFetchingEnvironment?.getArgument<String>("sortType").let {
+                dataFetchingEnvironment.getArgument<String>("sortType").let {
                     when (it) {
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
