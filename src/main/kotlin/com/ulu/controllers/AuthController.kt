@@ -4,7 +4,6 @@ import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
 import com.ulu.services.AccountCreationService
-import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -12,6 +11,11 @@ import io.micronaut.http.annotation.Post
 import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.DefaultSecurityService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.media.Content
+import io.swagger.v3.oas.annotations.media.Schema
+import io.swagger.v3.oas.annotations.parameters.RequestBody
+import io.swagger.v3.oas.annotations.responses.ApiResponse
 
 /**
  * Normal REST controller for user authentication.
@@ -28,19 +32,20 @@ import io.micronaut.security.utils.DefaultSecurityService
 class AuthController(
     private val securityService: DefaultSecurityService,
     private val userDataRepository: UserDataRepository,
-    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository
+    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository,
 ) {
-    // Default /login uses username instead of name
     data class RegisterDTO(
         val username: String,
         val password: String,
         val email: String,
-        val img: String?
+        val img: String?,
     )
 
     @Secured(SecurityRule.IS_AUTHENTICATED)
     @Post("/logout")
-    fun logout(request: HttpRequest<*>): HttpResponse<*> {
+    @Operation(summary = "Logout", description = "Invalidates all created refresh_tokens.")
+    @ApiResponse(responseCode = "200", description = "Successfully logged out")
+    fun logout(): HttpResponse<*> {
         // Invalidates all sessions.
         jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
         return HttpResponse.ok("All sessions logged out!")
@@ -48,7 +53,17 @@ class AuthController(
 
     @Secured(SecurityRule.IS_ANONYMOUS)
     @Post("/register")
-    fun register(@Body registerData: RegisterDTO): HttpResponse<*> {
+    @Operation(summary = "User Registration", description = "Registers a new user with the provided details.")
+    @RequestBody(
+        description = "Registration details",
+        required = true,
+        content = [Content(schema = Schema(implementation = RegisterDTO::class))],
+    )
+    @ApiResponse(responseCode = "201", description = "New account created.")
+    @ApiResponse(responseCode = "400", description = "Bad request if username is taken, password is insecure, or email is invalid.")
+    fun register(
+        @Body registerData: RegisterDTO,
+    ): HttpResponse<*> {
         if (userDataRepository.existsByName(registerData.username)) {
             return HttpResponse.badRequest("Username already taken!")
         }
@@ -60,12 +75,13 @@ class AuthController(
         }
 
         // Create new account
-        val userData = UserData(
-            name = registerData.username,
-            password = AccountCreationService().hashPassword(registerData.password),
-            email = registerData.email,
-            img = registerData.img
-        )
+        val userData =
+            UserData(
+                name = registerData.username,
+                password = AccountCreationService().hashPassword(registerData.password),
+                email = registerData.email,
+                img = registerData.img,
+            )
         userDataRepository.save(userData)
 
         return HttpResponse.created("New account created.")

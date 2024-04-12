@@ -55,6 +55,23 @@ micronaut:
         http-method: GET
         access: isAnonymous()
 
+      - pattern: /swagger-ui/**
+        http-method: GET
+        access: isAnonymous()
+
+      - pattern: /swagger/**
+        http-method: GET
+        access: isAnonymous()
+
+  router:
+    static-resources:
+      swagger:
+        paths: classpath:META-INF/swagger
+        mapping: /swagger/**
+      swagger-ui:
+        paths: classpath:META-INF/swagger/views/swagger-ui
+        mapping: /swagger-ui/**
+
 jpa:
   default:
     properties:

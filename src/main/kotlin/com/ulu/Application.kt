@@ -17,10 +17,15 @@ import jakarta.inject.Singleton
     info =
         Info(
             title = "unrated",
-            version = "0.0",
+            version = "1.0",
         ),
 )
-object Api
+object Api {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        run(Api.javaClass)
+    }
+}
 
 fun main(args: Array<String>) {
     run(*args)
@@ -51,8 +56,8 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             )
         val user2 =
             UserData(
-                name = "John",
-                email = "john@gmail.com",
+                name = "Jimmy",
+                email = "jimmy@gmail.com",
                 password = AccountCreationService().hashPassword("42"),
                 img = "www.test.com/2.png",
             )
