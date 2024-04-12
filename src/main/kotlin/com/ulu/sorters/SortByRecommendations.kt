@@ -5,17 +5,20 @@ import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
 import jakarta.inject.Singleton
+import java.net.URL
+
 
 @Singleton
 class SortByRecommendations {
-    @field:Client("http://127.0.0.1:5000")
-    lateinit var httpClient: HttpClient
 
     fun sortWhiskey(whiskeys : List<Whiskey>, id : Long) :  List<Whiskey> {
-        //Create the POST request
-        val request: HttpRequest<Any> = HttpRequest.POST("/process", "{$id}")
+        val url = "http://127.0.0.1:5000"
+        val client = HttpClient.create(URL(url))
 
-        val response = httpClient.toBlocking().exchange(request, String::class.java)
+        //Create the POST request
+        val request = HttpRequest.POST("/process", "{$id}")
+
+        val response = client.toBlocking().exchange(request, String::class.java)
 
         println(response.body())
 
