@@ -6,6 +6,7 @@ import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Post
 import io.micronaut.http.uri.UriBuilder
 import io.micronaut.security.annotation.Secured
+import io.micronaut.security.endpoints.TokenRefreshRequest
 import io.micronaut.security.rules.SecurityRule
 import io.swagger.v3.oas.annotations.Hidden
 import io.swagger.v3.oas.annotations.Operation
@@ -17,7 +18,7 @@ import java.net.URI
 
 @Controller
 class DocsController {
-    data class LoginDTO(
+    private data class LoginDTO(
         val username: String,
         val password: String,
     )
@@ -46,6 +47,21 @@ class DocsController {
     )
     fun dummyGraphql() {
         // This is just a dummy for creating docs for the real /graphql
+    }
+
+    @Post("/oauth/access_token")
+    @RequestBody(
+        description = "Refresh token details",
+        required = true,
+        content = [Content(schema = Schema(implementation = TokenRefreshRequest::class))],
+    )
+    @ApiResponse(responseCode = "200", description = "JWT refresh successful.")
+    @ApiResponse(
+        responseCode = "400",
+        description = "Invalid request if missing refresh_token and grant_type. Invalid grant if refresh token is invalid",
+    )
+    fun dummyOauthAccessToken() {
+        // This is just a dummy for creating docs, actual implementation provided by micronaut security
     }
 
     @Get("/")
