@@ -21,9 +21,9 @@ class WhiskeyFetcher(
     private val securityService: DefaultSecurityService,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
-        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
+        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
             val whiskeyId: String =
-                dataFetchingEnvironment?.getArgument("id")
+                dataFetchingEnvironment.getArgument("id")
                     ?: error("AttributeCategory with identical name already exists")
             val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
 
@@ -38,21 +38,20 @@ class WhiskeyFetcher(
     }
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
-        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment? ->
-            val whiskeys = whiskeyRepository.findAll()
+        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
+            // Find whiskeys using paging
+            val whiskeys: List<Whiskey> = whiskeyRepository.listAll(RequestValidatorService().getPaging(dataFetchingEnvironment)).content
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
                 it.calculateAvgScore()
-
                 it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!)
                 it.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
-
                 it.calculateAvgAttributeCategoryScore()
             }
 
             val sortedWhiskey =
-                dataFetchingEnvironment?.getArgument<String>("sortType").let {
+                dataFetchingEnvironment.getArgument<String>("sortType").let {
                     when (it) {
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)

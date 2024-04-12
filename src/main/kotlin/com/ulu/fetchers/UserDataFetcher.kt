@@ -23,6 +23,16 @@ class UserDataFetcher(
         }
     }
 
+    fun getUsers(): DataFetcher<List<UserData>> {
+        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
+            val userName: String = dataFetchingEnvironment.getArgument("name")
+            return@DataFetcher userDataRepository.getByNameContainsIgnoreCase(
+                userName,
+                RequestValidatorService().getPaging(dataFetchingEnvironment),
+            ).content
+        }
+    }
+
     fun getLoggedInUser(): DataFetcher<UserData> {
         return DataFetcher {
             RequestValidatorService().verifyAuthenticated(securityService)
