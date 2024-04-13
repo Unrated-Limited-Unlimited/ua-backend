@@ -5,7 +5,7 @@ import com.nimbusds.jwt.SignedJWT
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Assertions.*
 class WhiskeyTest(
     @Client("/") private val client: HttpClient,
     private val databaseService: DatabaseService,
+    private val accountService: AccountService,
 ) {
     private var adminUser: UserData? = null
     private var user: UserData? = null
@@ -39,14 +40,14 @@ class WhiskeyTest(
         user =
             UserData(
                 name = "Petra",
-                password = AccountCreationService().hashPassword("111"),
+                password = accountService.hashPassword("111"),
                 email = "testing@proton.com",
                 img = "img.txt",
             )
         adminUser =
             UserData(
                 name = "John",
-                password = AccountCreationService().hashPassword("111"),
+                password = accountService.hashPassword("111"),
                 email = "test@proton.com",
                 img = "img.txt",
             )

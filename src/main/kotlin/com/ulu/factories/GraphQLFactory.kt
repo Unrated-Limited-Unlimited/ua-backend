@@ -75,6 +75,7 @@ class GraphQLFactory {
             }
             type("Mutation") {
                 // User
+                it.dataFetcher("createUser", userDataFetcher.createUser())
                 it.dataFetcher("editUser", userDataFetcher.editUser())
                 it.dataFetcher("deleteUser", userDataFetcher.deleteUser())
                 // Rating

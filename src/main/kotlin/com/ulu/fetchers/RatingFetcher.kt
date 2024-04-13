@@ -14,9 +14,10 @@ class RatingFetcher(
     private val ratingRepository: RatingRepository,
     private val whiskeyRepository: WhiskeyRepository,
     private val userDataRepository: UserDataRepository,
-    private val securityService: DefaultSecurityService,
     private val attributeRepository: AttributeRepository,
     private val attributeCategoryRepository: AttributeCategoryRepository,
+    private val securityService: DefaultSecurityService,
+    private val requestValidatorService: RequestValidatorService,
 ) {
     fun getRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
@@ -31,7 +32,7 @@ class RatingFetcher(
 
     fun createRating(): DataFetcher<Rating> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            RequestValidatorService().verifyAuthenticated(securityService)
+            requestValidatorService.verifyAuthenticated(securityService)
 
             val whiskeyId = (environment.getArgument("whiskeyId") as String).toLong()
             val whiskey = whiskeyRepository.findById(whiskeyId)
@@ -51,10 +52,9 @@ class RatingFetcher(
                     score = ratingInput["score"] as? Double ?: error("Invalid request: rating score is missing"),
                 )
             // Validate input
-            RequestValidatorService().verifyScoreRange(rating.score)
-            RequestValidatorService().verifyMinLength(rating.title)
-            RequestValidatorService().verifyMinLength(rating.body, 0)
+            validateRating(rating)
 
+            // Save rating to jpa
             ratingRepository.save(rating)
 
             // Add given attributes to rating
@@ -78,9 +78,7 @@ class RatingFetcher(
             }
 
             // Validate input
-            RequestValidatorService().verifyScoreRange(rating.score)
-            RequestValidatorService().verifyMinLength(rating.title)
-            RequestValidatorService().verifyMinLength(rating.body, 0)
+            validateRating(rating)
 
             // Remove previous attributes from review & add updated ones
             attributeRepository.deleteAll(rating.attributes)
@@ -101,6 +99,12 @@ class RatingFetcher(
             ratingRepository.delete(rating)
             return@DataFetcher "deleted"
         }
+    }
+
+    private fun validateRating(rating: Rating) {
+        requestValidatorService.verifyScoreRange(rating.score)
+        requestValidatorService.verifyMinLength(rating.title)
+        requestValidatorService.verifyMinLength(rating.body, 0)
     }
 
     /**
@@ -128,7 +132,7 @@ class RatingFetcher(
 
             // Verify that score is within bounds
             val attributeScore = attributeInput["score"] as Double
-            RequestValidatorService().verifyScoreRange(attributeScore)
+            requestValidatorService.verifyScoreRange(attributeScore)
 
             // Create a new Attribute and add it to the rating
             val attribute = Attribute(category = attributeCategory.get(), rating = rating, score = attributeScore)
@@ -146,7 +150,7 @@ class RatingFetcher(
         environment: DataFetchingEnvironment,
         argumentName: String = "id",
     ): Rating {
-        RequestValidatorService().verifyAuthenticated(securityService)
+        requestValidatorService.verifyAuthenticated(securityService)
 
         val ratingId = (environment.getArgument(argumentName) as String).toLong()
         val rating = ratingRepository.findById(ratingId)
@@ -154,7 +158,7 @@ class RatingFetcher(
             error("No rating with id $ratingId.")
         }
         val auth = securityService.authentication.get()
-        if (rating.get().user?.name != auth.name && !RequestValidatorService().isAdmin(securityService)) {
+        if (rating.get().user?.name != auth.name && !requestValidatorService.isAdmin(securityService)) {
             error("Can't change someone else's rating")
         }
         return rating.get()

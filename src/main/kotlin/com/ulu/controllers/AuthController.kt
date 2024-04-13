@@ -1,9 +1,7 @@
 package com.ulu.controllers
 
-import com.ulu.models.UserData
-import com.ulu.repositories.JwtRefreshTokenRepository
-import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.dto.RegisterRequest
+import com.ulu.services.AccountService
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
@@ -31,23 +29,15 @@ import io.swagger.v3.oas.annotations.responses.ApiResponse
 @Controller
 class AuthController(
     private val securityService: DefaultSecurityService,
-    private val userDataRepository: UserDataRepository,
-    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository,
+    private val accountService: AccountService,
 ) {
-    data class RegisterDTO(
-        val username: String,
-        val password: String,
-        val email: String,
-        val img: String?,
-    )
-
     @Secured(SecurityRule.IS_AUTHENTICATED)
     @Post("/logout")
     @Operation(summary = "Logout", description = "Invalidates all created refresh_tokens.")
-    @ApiResponse(responseCode = "200", description = "Successfully logged out")
+    @ApiResponse(responseCode = "200", description = "All sessions logged out")
     fun logout(): HttpResponse<*> {
         // Invalidates all sessions.
-        jwtRefreshTokenRepository.updateRevokedByUsername(securityService.authentication.get().name, true)
+        accountService.invalidateSessions(securityService.authentication.get().name)
         return HttpResponse.ok("All sessions logged out!")
     }
 
@@ -57,33 +47,16 @@ class AuthController(
     @RequestBody(
         description = "Registration details",
         required = true,
-        content = [Content(schema = Schema(implementation = RegisterDTO::class))],
+        content = [Content(schema = Schema(implementation = RegisterRequest::class))],
     )
     @ApiResponse(responseCode = "201", description = "New account created.")
     @ApiResponse(responseCode = "400", description = "Bad request if username is taken, password is insecure, or email is invalid.")
     fun register(
-        @Body registerData: RegisterDTO,
+        @Body registerData: RegisterRequest,
     ): HttpResponse<*> {
-        if (userDataRepository.existsByName(registerData.username)) {
-            return HttpResponse.badRequest("Username already taken!")
+        return when (val result = accountService.registerNewAccount(registerData)) {
+            is AccountService.AccountCreationResult.Success -> HttpResponse.created(result.message)
+            is AccountService.AccountCreationResult.Failure -> HttpResponse.badRequest(result.error)
         }
-        if (!AccountCreationService().isValidPassword(registerData.password)) {
-            return HttpResponse.badRequest("Unsecure password provided.")
-        }
-        if (!AccountCreationService().isValidEmail(registerData.email)) {
-            return HttpResponse.badRequest("Invalid email provided.")
-        }
-
-        // Create new account
-        val userData =
-            UserData(
-                name = registerData.username,
-                password = AccountCreationService().hashPassword(registerData.password),
-                email = registerData.email,
-                img = registerData.img,
-            )
-        userDataRepository.save(userData)
-
-        return HttpResponse.created("New account created.")
     }
 }

@@ -3,7 +3,7 @@ package com.ulu
 import com.ulu.models.*
 import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.WhiskeyRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import org.junit.jupiter.api.*
@@ -17,11 +17,12 @@ class JpaTest(
     private val databaseService: DatabaseService,
     private val whiskeyRepository: WhiskeyRepository,
     private val ratingRepository: RatingRepository,
+    private val accountService: AccountService,
 ) {
     @Test
     fun test() {
         val userData =
-            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+            UserData(name = "John", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val whiskey =
             Whiskey(
                 title = "test",
@@ -62,7 +63,7 @@ class JpaTest(
     @Test
     fun removeChildTest() {
         val userData =
-            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+            UserData(name = "John", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val whiskey =
             Whiskey(
                 title = "test",
@@ -97,9 +98,9 @@ class JpaTest(
     fun avgWhiskeyScoreTest() {
         val whiskey = Whiskey(img = "img", title = "Test", price = 100.0, summary = "Whiskey", volume = 2.0, percentage = 50.0)
         val userData1 =
-            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+            UserData(name = "John", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val userData2 =
-            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+            UserData(name = "John", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val rating1 = Rating(user = userData1, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
         val rating2 = Rating(user = userData2, whiskey = whiskey, title = "Good", body = "This is an in-depth review.", score = 5.0)
 
@@ -128,9 +129,9 @@ class JpaTest(
         val whiskey = Whiskey(img = "img", title = "Test", price = 100.0, summary = "Whiskey", volume = 2.0, percentage = 50.0)
 
         val userData1 =
-            UserData(name = "John1", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+            UserData(name = "John1", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val userData2 =
-            UserData(name = "John2", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+            UserData(name = "John2", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
 
         val rating1 = Rating(user = userData1, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
         val rating2 = Rating(user = userData2, whiskey = whiskey, title = "Good", body = "This is an in-depth review.", score = 5.0)
@@ -158,7 +159,7 @@ class JpaTest(
         val userData1 =
             UserData(
                 name = "John1",
-                password = AccountCreationService().hashPassword("321"),
+                password = accountService.hashPassword("321"),
                 email = "test@proton.com",
                 img = "img.txt",
             )

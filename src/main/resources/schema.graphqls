@@ -40,6 +40,7 @@ type Query{
 
 type Mutation{
     #Requires valid JWT token
+    createUser(user: CreateUserInput!) : AuthUser
     editUser(user : EditUserInput) : AuthUser
     deleteUser : String
 
@@ -104,6 +105,13 @@ input RatingInput{
 input AttributeInput{
     id: ID!
     score: Float!
+}
+
+input CreateUserInput{
+    name: String!
+    email: String!
+    password: String!
+    img: String!
 }
 
 input EditUserInput{

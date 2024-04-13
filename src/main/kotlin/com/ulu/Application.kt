@@ -2,7 +2,7 @@ package com.ulu
 
 import com.ulu.models.*
 import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.context.annotation.Requires
 import io.micronaut.context.annotation.Value
@@ -32,7 +32,11 @@ fun main(args: Array<String>) {
 }
 
 @Singleton
-class TestDataCreator(private val dbService: DatabaseService, private val userDataRepository: UserDataRepository) {
+class TestDataCreator(
+    private val dbService: DatabaseService,
+    private val userDataRepository: UserDataRepository,
+    private val accountService: AccountService,
+) {
     @Value("\${ADMIN_PASS:undefined}")
     lateinit var adminPass: String
 
@@ -51,14 +55,14 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             UserData(
                 name = "Jeff",
                 email = "jeff@bank.no",
-                password = AccountCreationService().hashPassword("123"),
+                password = accountService.hashPassword("123"),
                 img = "www.test.com/1.png",
             )
         val user2 =
             UserData(
                 name = "Jimmy",
                 email = "jimmy@gmail.com",
-                password = AccountCreationService().hashPassword("42"),
+                password = accountService.hashPassword("42"),
                 img = "www.test.com/2.png",
             )
 
@@ -125,7 +129,7 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             error("Could not find environment variable: ADMIN_PASS")
         }
         val adminUser =
-            UserData(name = "ADMIN", email = "admin@email.com", password = AccountCreationService().hashPassword(adminPass), img = "ADMIN")
+            UserData(name = "ADMIN", email = "admin@email.com", password = accountService.hashPassword(adminPass), img = "ADMIN")
         adminUser.roles.add("ROLE_ADMIN")
         dbService.save(adminUser)
     }

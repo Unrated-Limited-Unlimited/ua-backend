@@ -6,7 +6,7 @@ import com.ulu.models.AttributeCategory
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
@@ -24,6 +24,7 @@ import org.junit.jupiter.api.Assertions.*
 class RatingTest(
     @Client("/") private val client: HttpClient,
     private val databaseService: DatabaseService,
+    private val accountService: AccountService,
 ) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
@@ -35,7 +36,7 @@ class RatingTest(
         user =
             UserData(
                 name = "John",
-                password = AccountCreationService().hashPassword("321"),
+                password = accountService.hashPassword("321"),
                 email = "test@proton.com",
                 img = "img.txt",
             )

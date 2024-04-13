@@ -1,9 +1,10 @@
 package com.ulu.fetchers
 
+import com.ulu.dto.RegisterRequest
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.RequestValidatorService
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
@@ -15,6 +16,7 @@ class UserDataFetcher(
     private val userDataRepository: UserDataRepository,
     private val securityService: DefaultSecurityService,
     private val jwtRefreshTokenRepository: JwtRefreshTokenRepository,
+    private val accountService: AccountService,
 ) {
     fun getUser(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
@@ -40,6 +42,24 @@ class UserDataFetcher(
         }
     }
 
+    fun createUser(): DataFetcher<UserData> {
+        return DataFetcher { environment: DataFetchingEnvironment ->
+            val userMap: Map<*, *> = environment.getArgument("user")
+            val registerData =
+                RegisterRequest(
+                    userMap["name"] as String,
+                    userMap["password"] as String,
+                    userMap["email"] as String,
+                    userMap["img"] as String,
+                )
+            // Create account.
+            return@DataFetcher when (val result = accountService.registerNewAccount(registerData)) {
+                is AccountService.AccountCreationResult.Success -> result.userData
+                is AccountService.AccountCreationResult.Failure -> error(result.error)
+            }
+        }
+    }
+
     fun editUser(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
             RequestValidatorService().verifyAuthenticated(securityService)
@@ -47,20 +67,19 @@ class UserDataFetcher(
             val editUserMap: Map<*, *> = dataFetchingEnvironment.getArgument("user")
             val username = securityService.authentication.get().name
             val userData: UserData = userDataRepository.getUserDataByName(username) ?: error("User not found")
-            val accountCreationService = AccountCreationService()
 
             editUserMap["email"]?.let { newEmail ->
-                if (!accountCreationService.isValidEmail(newEmail as String)) {
+                if (!accountService.isValidEmail(newEmail as String)) {
                     error("Invalid email provided.")
                 }
                 userData.email = newEmail
             }
 
             editUserMap["password"]?.let { newPass ->
-                if (!accountCreationService.isValidPassword(newPass as String)) {
+                if (!accountService.isValidPassword(newPass as String)) {
                     error("Password to weak")
                 }
-                userData.password = accountCreationService.hashPassword(newPass)
+                userData.password = accountService.hashPassword(newPass)
             }
 
             editUserMap["img"]?.let { newImg ->

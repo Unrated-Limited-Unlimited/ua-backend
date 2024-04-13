@@ -1,5 +1,6 @@
 package com.ulu.controllers
 
+import com.ulu.dto.LoginRequest
 import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
@@ -18,38 +19,32 @@ import java.net.URI
 
 @Controller
 class DocsController {
-    private data class LoginDTO(
-        val username: String,
-        val password: String,
-    )
-
+    @Secured(SecurityRule.IS_ANONYMOUS)
     @Post("/login\u200E")
     @Operation(
         summary = "User login",
-        description = "Authorize a user with username and password. A JWT token in the form of a cookie is issued upon success.",
+        description =
+            "Authorize a user with username and password." +
+                "\nA JWT token in the form of a cookie is issued upon success.",
     )
     @RequestBody(
         description = "Registration details",
         required = true,
-        content = [Content(schema = Schema(implementation = LoginDTO::class))],
+        content = [Content(schema = Schema(implementation = LoginRequest::class))],
     )
     @ApiResponse(responseCode = "200", description = "Login successful.")
     @ApiResponse(responseCode = "401", description = "Bad request if username or password is missing, or invalid user credentials.")
-    fun dummyLogin() {
+    fun dummyLogin(): HttpResponse<*> {
         // The /login is provided by micronaut security, this is just for OpenAPI documentation.
+        return HttpResponse.badRequest("This is a documentation endpoint.")
     }
 
-    @Post("/graphql\u200E")
-    @ApiResponse(responseCode = "200", description = "Query sent.")
+    @Secured(SecurityRule.IS_ANONYMOUS)
+    @Post("/oauth/access_token\u200E")
     @Operation(
-        summary = "GraphQL API",
-        description = "Endpoint for GraphQL requests. For further details look at schema.graphqls or use /graphiql to create requests.",
+        summary = "Refresh JWT token",
+        description = "Create a new JWT session token by using refresh token.",
     )
-    fun dummyGraphql() {
-        // This is just a dummy for creating docs for the real /graphql
-    }
-
-    @Post("/oauth/access_token")
     @RequestBody(
         description = "Refresh token details",
         required = true,
@@ -58,16 +53,35 @@ class DocsController {
     @ApiResponse(responseCode = "200", description = "JWT refresh successful.")
     @ApiResponse(
         responseCode = "400",
-        description = "Invalid request if missing refresh_token and grant_type. Invalid grant if refresh token is invalid",
+        description =
+            "Invalid request if missing refresh_token and grant_type." +
+                "\nInvalid grant if refresh token is invalid",
     )
-    fun dummyOauthAccessToken() {
+    fun dummyOauthAccessToken(): HttpResponse<*> {
         // This is just a dummy for creating docs, actual implementation provided by micronaut security
+        return HttpResponse.badRequest("This is a documentation endpoint.")
     }
 
-    @Get("/")
-    @Hidden
     @Secured(SecurityRule.IS_ANONYMOUS)
+    @Post("/graphql\u200E")
+    @ApiResponse(responseCode = "200", description = "Query sent.")
+    @Operation(
+        summary = "GraphQL API",
+        description =
+            "Endpoint for GraphQL requests." +
+                "\nFor further details look at schema.graphqls or use the /graphiql playground to create requests.",
+    )
+    @RequestBody(required = true)
+    fun dummyGraphql(): HttpResponse<*> {
+        // This is just a dummy for creating docs for the real /graphql
+        return HttpResponse.badRequest("This is a documentation endpoint.")
+    }
+
+    @Secured(SecurityRule.IS_ANONYMOUS)
+    @Get("/")
+    @Hidden // Hide from OpenAPI docs
     fun swaggerRedirect(): HttpResponse<*> {
+        // Redirect / to /swagger-ui
         val uri: URI = UriBuilder.of("/swagger-ui").path("index.html").build()
         return HttpResponse.seeOther<URI>(uri)
     }
