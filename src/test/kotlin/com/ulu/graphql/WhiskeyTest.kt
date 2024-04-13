@@ -20,33 +20,95 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class WhiskeyTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class WhiskeyTest(
+    @Client("/") private val client: HttpClient,
+    private val databaseService: DatabaseService,
+) {
     private var adminUser: UserData? = null
     private var user: UserData? = null
-    private var whiskey: Whiskey? = null
-    private var rating: Rating? = null
+    private var whiskey1: Whiskey? = null
+    private var whiskey2: Whiskey? = null
+    private var whiskey3: Whiskey? = null
+    private var whiskey4: Whiskey? = null
+    private var rating1: Rating? = null
+    private var rating2: Rating? = null
+    private var rating3: Rating? = null
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "Petra", password = AccountCreationService().hashPassword("111"), email = "testing@proton.com", img = "img.txt")
-        adminUser = UserData(name = "John", password = AccountCreationService().hashPassword("111"), email = "test@proton.com", img = "img.txt")
+        user =
+            UserData(
+                name = "Petra",
+                password = AccountCreationService().hashPassword("111"),
+                email = "testing@proton.com",
+                img = "img.txt",
+            )
+        adminUser =
+            UserData(
+                name = "John",
+                password = AccountCreationService().hashPassword("111"),
+                email = "test@proton.com",
+                img = "img.txt",
+            )
         adminUser?.roles?.add("ROLE_ADMIN")
 
-        whiskey = Whiskey(
-            title = "test",
-            summary = "Its a test",
-            img = "owl.png",
-            percentage = 99.9,
-            price = 199.0,
-            volume = 10.0
-        )
-        rating =
-            Rating(user = adminUser, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
+        whiskey1 =
+            Whiskey(
+                title = "test",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 199.0,
+                volume = 10.0,
+            )
+
+        whiskey2 =
+            Whiskey(
+                title = "test2",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 99.0,
+                volume = 10.0,
+            )
+
+        whiskey3 =
+            Whiskey(
+                title = "test3",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 50.0,
+                volume = 10.0,
+            )
+
+        whiskey4 =
+            Whiskey(
+                title = "banana",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 99.0,
+                volume = 10.0,
+            )
+        rating1 =
+            Rating(user = adminUser, whiskey = whiskey1, title = "Mid", body = "This is an in-depth review.", score = 0.2)
+
+        rating2 =
+            Rating(user = adminUser, whiskey = whiskey3, title = "Mid", body = "This is an in-depth review.", score = 0.2)
+
+        rating3 =
+            Rating(user = adminUser, whiskey = whiskey2, title = "Bad", body = "This is an in-depth review.", score = 0.1)
 
         databaseService.save(adminUser)
         databaseService.save(user)
-        databaseService.save(whiskey)
-        databaseService.save(rating)
+        databaseService.save(whiskey1)
+        databaseService.save(whiskey2)
+        databaseService.save(whiskey3)
+        databaseService.save(whiskey4)
+        databaseService.save(rating1)
+        databaseService.save(rating2)
+        databaseService.save(rating3)
     }
 
     @AfterEach
@@ -57,7 +119,7 @@ class WhiskeyTest(@Client("/") private val client: HttpClient, private val datab
     @Test
     fun getWhiskeyTest() {
         val query =
-            """ { "query": "{ getWhiskey(id:\"${whiskey?.id}\") { id, title, avgScore, ratings { user{name}, body } } }" }" """
+            """ { "query": "{ getWhiskey(id:\"${whiskey1?.id}\") { id, title, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query, adminUser!!)
         assertNotNull(body)
 
@@ -67,8 +129,8 @@ class WhiskeyTest(@Client("/") private val client: HttpClient, private val datab
 
         val whiskeyById = whiskeyInfo["getWhiskey"] as Map<*, *>
 
-        assertEquals(whiskey?.title, whiskeyById["title"])
-        assertEquals(2.0, whiskeyById["avgScore"]) // Is calculated from request
+        assertEquals(whiskey1?.title, whiskeyById["title"])
+        assertEquals(0.2, whiskeyById["avgScore"]) // Is calculated from request
 
         val ratings = whiskeyById["ratings"] as ArrayList<*>
         val ratingMap = ratings[0] as Map<*, *>
@@ -76,21 +138,51 @@ class WhiskeyTest(@Client("/") private val client: HttpClient, private val datab
         assertNotNull(ratings)
         assertNotNull(userMap)
 
-        assertEquals(rating?.body, ratingMap["body"])
+        assertEquals(rating1?.body, ratingMap["body"])
+        assertEquals(adminUser?.name, userMap["name"])
+    }
+
+    @Test
+    fun getWhiskeysFilteredSortedTest() {
+        val query =
+            """ { "query": "{ getWhiskeys(sort: {sortType: PRICE, reverse: false}, filters: [ {comp: GT, field: { avgScore: 0.1 }}, {field: { title: \"est\" }} ]) { id, title, avgScore, ratings { user{name}, body } } }" }" """
+        val body = makeRequest(query, adminUser!!)
+        assertNotNull(body)
+
+        val whiskeyInfo = body["data"] as Map<*, *>
+        println(whiskeyInfo.toString())
+        assertTrue(whiskeyInfo.containsKey("getWhiskeys"))
+
+        val whiskeys = whiskeyInfo["getWhiskeys"] as List<*>
+
+        assertEquals(2, whiskeys.size)
+
+        val whiskeyById = whiskeys[0] as Map<*, *>
+
+        assertEquals(whiskey1?.title, whiskeyById["title"])
+        assertEquals(0.2, whiskeyById["avgScore"]) // Is calculated from request
+
+        val ratings = whiskeyById["ratings"] as ArrayList<*>
+        val ratingMap = ratings[0] as Map<*, *>
+        val userMap = ratingMap["user"] as Map<*, *>
+        assertNotNull(ratings)
+        assertNotNull(userMap)
+
+        assertEquals(rating1?.body, ratingMap["body"])
         assertEquals(adminUser?.name, userMap["name"])
     }
 
     @Test
     fun editWhiskeyTest() {
         val query =
-            """ { "query": "mutation{ editWhiskey(id:\"${whiskey?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
+            """ { "query": "mutation{ editWhiskey(id:\"${whiskey1?.id}\", whiskeyInput: {title: \"New title\" }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query, adminUser!!)
         assertNotNull(body)
 
         val whiskeyInfo = body["data"] as Map<*, *>
         println(whiskeyInfo.toString())
         assertTrue(whiskeyInfo.containsKey("editWhiskey"))
-        assertTrue((whiskeyInfo["editWhiskey"] as Map<*,*>).containsValue("New title"))
+        assertTrue((whiskeyInfo["editWhiskey"] as Map<*, *>).containsValue("New title"))
     }
 
     @Test
@@ -104,11 +196,11 @@ class WhiskeyTest(@Client("/") private val client: HttpClient, private val datab
         println(whiskeyInfo.toString())
         assertTrue(whiskeyInfo.containsKey("createWhiskey"))
 
-        assertTrue((whiskeyInfo["createWhiskey"] as Map<*,*>).containsValue("New Whiskey"))
+        assertTrue((whiskeyInfo["createWhiskey"] as Map<*, *>).containsValue("New Whiskey"))
     }
 
     @Test
-    fun nonAdminDeniedCreateWhiskeyTest(){
+    fun nonAdminDeniedCreateWhiskeyTest() {
         val query =
             """ { "query": "mutation{ createWhiskey(whiskeyInput: {title: \"New Whiskey\", summary: \"A whiskey\", img: \"whiskey.png\", price: 199.9, volume: 10.0, percentage: 10.0 }) { id, title, summary, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query, user!!)
@@ -126,7 +218,7 @@ class WhiskeyTest(@Client("/") private val client: HttpClient, private val datab
 
     @Test
     fun deleteWhiskeyTest() {
-        val query = """ { "query": "mutation{ deleteWhiskey(id: \"${whiskey?.id}\") }" } """
+        val query = """ { "query": "mutation{ deleteWhiskey(id: \"${whiskey1?.id}\") }" } """
         val body = makeRequest(query, adminUser!!)
 
         assertNotNull(body)
@@ -153,14 +245,19 @@ class WhiskeyTest(@Client("/") private val client: HttpClient, private val datab
         return bearerAccessRefreshToken.accessToken
     }
 
-    private fun makeRequest(query: String, user: UserData): Map<String, Any> {
+    private fun makeRequest(
+        query: String,
+        user: UserData,
+    ): Map<String, Any> {
         val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken(user))
-        val response = client.toBlocking().exchange(
-            requestWithAuthorization, Argument.mapOf(
-                String::class.java,
-                Any::class.java
+        val response =
+            client.toBlocking().exchange(
+                requestWithAuthorization,
+                Argument.mapOf(
+                    String::class.java,
+                    Any::class.java,
+                ),
             )
-        )
         assertEquals(HttpStatus.OK, response.status)
         println(response.body())
         return response.body()
