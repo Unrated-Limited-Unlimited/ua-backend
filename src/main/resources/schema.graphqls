@@ -7,6 +7,15 @@ enum SortType{
     #PERSONALIZED # Get "AI" recommended based on user preferences
 }
 
+enum Comparator {
+    LT, # Less than
+    GT, # Greater than
+    LE, # Less than or equal
+    GE, # Greater than or equal
+    EQ  # Equals
+}
+
+
 type Query{
     # Get logged in user using JWT
     getLoggedInUser : AuthUser
@@ -20,7 +29,7 @@ type Query{
     getRating(id: ID!) : Rating
 
     # Get a list of whiskeys based on sortType seperated by paging: {page: 0, size: 10}
-    getWhiskeys(sortType : SortType, paging: Paging): [Whiskey]
+    getWhiskeys(sortType : SortType, filters: [Filter], paging: Paging): [Whiskey]
 
     # Get a list of users that match the query name
     getUsers(name: String!, paging: Paging) : [User]
@@ -42,7 +51,6 @@ type Mutation{
     editThumb(id: ID!, isGood: Boolean!): Thumb
     deleteThumb(id: ID!) : String
 
-
     # Requires ROLE_ADMIN
     createWhiskey(whiskeyInput : WhiskeyInput!) : Whiskey
     editWhiskey(id: ID!, whiskeyInput : WhiskeyInput) : Whiskey
@@ -54,6 +62,25 @@ type Mutation{
 }
 
 ######################################
+
+# Filter whiskey using a comparator and a field value.
+input Filter {
+    comp: Comparator,
+    field: Field!
+}
+
+# What to compare against
+# Only the first one of these will be used for each given filter
+input Field {
+    title: String,            # Filter by whiskey name (does not need comparator)
+    avgScore: Float,          # Avg whiskey score
+    attribute: InputAttribute # Filter by an attribute
+}
+
+input InputAttribute{
+    id : Int!        # Attribute category ID
+    avgScore: Float! # Attribute average score value
+}
 
 input Paging{
     page: Int = 0

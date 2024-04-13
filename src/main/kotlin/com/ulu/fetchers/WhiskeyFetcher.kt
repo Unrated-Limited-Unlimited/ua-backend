@@ -21,9 +21,9 @@ class WhiskeyFetcher(
     private val securityService: DefaultSecurityService,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
-        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
+        return DataFetcher { environment: DataFetchingEnvironment ->
             val whiskeyId: String =
-                dataFetchingEnvironment.getArgument("id")
+                environment.getArgument("id")
                     ?: error("AttributeCategory with identical name already exists")
             val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
 
@@ -38,9 +38,9 @@ class WhiskeyFetcher(
     }
 
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
-        return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
+        return DataFetcher { environment: DataFetchingEnvironment ->
             // Find whiskeys using paging
-            val whiskeys: List<Whiskey> = whiskeyRepository.listAll(RequestValidatorService().getPaging(dataFetchingEnvironment)).content
+            var whiskeys: List<Whiskey> = whiskeyRepository.listAll(RequestValidatorService().getPaging(environment)).content
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
@@ -50,8 +50,11 @@ class WhiskeyFetcher(
                 it.calculateAvgAttributeCategoryScore()
             }
 
+            // Filter whiskeys based on filters input
+            whiskeys = filterWhiskeysByComparator(whiskeys, environment)
+
             val sortedWhiskey =
-                dataFetchingEnvironment.getArgument<String>("sortType").let {
+                environment.getArgument<String>("sortType").let {
                     when (it) {
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
@@ -122,5 +125,71 @@ class WhiskeyFetcher(
             error("No whiskey with id $whiskeyId.")
         }
         return whiskey.get()
+    }
+
+    /**
+     * Use the given Comparator given in input to filter whiskey list.
+     * */
+    private fun filterWhiskeysByComparator(
+        whiskeys: List<Whiskey>,
+        environment: DataFetchingEnvironment,
+    ): List<Whiskey> {
+        var filteredWhiskeys = whiskeys
+        val filters = environment.getArgument("filters") as List<Map<*, *>>? ?: return whiskeys
+        filters.forEach { filter ->
+            val field = filter["field"] as Map<*, *>
+
+            // Filter by whiskey name, does not require comparator
+            field["title"]?.let { title ->
+                filteredWhiskeys =
+                    filteredWhiskeys.filter {
+                            whiskey: Whiskey ->
+                        whiskey.title.contains(title as String, ignoreCase = true)
+                    }
+                return@forEach
+            }
+
+            // Pattern match by Comparator enum
+            filteredWhiskeys =
+                when (filter["comp"] as String?) {
+                    "LT" -> filterWhiskeys(whiskeys, field) { x, y -> x < y }
+                    "GT" -> filterWhiskeys(whiskeys, field) { x, y -> x > y }
+                    "LE" -> filterWhiskeys(whiskeys, field) { x, y -> x <= y }
+                    "GE" -> filterWhiskeys(whiskeys, field) { x, y -> x >= y }
+                    "EQ" -> filterWhiskeys(whiskeys, field) { x, y -> x == y }
+                    else -> filteredWhiskeys
+                }
+        }
+        return filteredWhiskeys
+    }
+
+    /**
+     * Filter the given list of whiskeys by using the first non-null field variable given in input/environment
+     * */
+    private fun filterWhiskeys(
+        whiskeys: List<Whiskey>,
+        field: Map<*, *>,
+        comparator: (Double, Double) -> Boolean,
+    ): List<Whiskey> {
+        // Filter by whiskey average score
+        field["avgScore"]?.let { avgScore ->
+            return whiskeys.filter { whiskey -> comparator(whiskey.avgScore, avgScore as Double) }
+        }
+
+        // Filter by attribute using attribute category id and avgScore
+        field["attribute"]?.let { attribute ->
+            attribute as Map<*, *>
+            val attributeId = attribute["id"] as Int
+            val attributeAvgScore = attribute["avgScore"] as Double
+
+            return whiskeys.filter { whiskey ->
+                whiskey.categories.any { category ->
+                    (category.id == attributeId.toLong()) && (comparator(category.avgScore, attributeAvgScore))
+                }
+            }
+        }
+
+        // Unfiltered
+        return whiskeys
     }
 }
