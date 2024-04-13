@@ -29,7 +29,7 @@ type Query{
     getRating(id: ID!) : Rating
 
     # Get a list of whiskeys based on sortType seperated by paging: {page: 0, size: 10}
-    getWhiskeys(sortType : SortType, filters: [Filter], paging: Paging): [Whiskey]
+    getWhiskeys(sort: Sort, filters: [Filter], paging: Paging): [Whiskey]
 
     # Get a list of users that match the query name
     getUsers(name: String!, paging: Paging) : [User]
@@ -62,6 +62,12 @@ type Mutation{
 }
 
 ######################################
+
+# Sort using a sorting type as defined in enum + reversed boolean
+input Sort{
+    sortType: SortType!
+    reverse: Boolean
+}
 
 # Filter whiskey using a comparator and a field value.
 input Filter {

@@ -40,7 +40,8 @@ class WhiskeyFetcher(
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { environment: DataFetchingEnvironment ->
             // Find whiskeys using paging
-            var whiskeys: List<Whiskey> = whiskeyRepository.listAll(RequestValidatorService().getPaging(environment)).content
+            var whiskeys: List<Whiskey> =
+                whiskeyRepository.listAll(RequestValidatorService().getPaging(environment)).content
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
@@ -53,8 +54,10 @@ class WhiskeyFetcher(
             // Filter whiskeys based on filters input
             whiskeys = filterWhiskeysByComparator(whiskeys, environment)
 
+            // Sort whiskeys
+            val sort = environment.getArgument("sort") as Map<*, *>
             val sortedWhiskey =
-                environment.getArgument<String>("sortType").let {
+                sort["sortType"].let {
                     when (it) {
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
@@ -63,6 +66,12 @@ class WhiskeyFetcher(
                         else -> whiskeys
                     }
                 }
+
+            // Reverse sorted list
+            val isReversed = sort["reverse"] as Boolean?
+            if (isReversed != null && isReversed) {
+                return@DataFetcher sortedWhiskey.reversed()
+            }
             return@DataFetcher sortedWhiskey
         }
     }
@@ -134,16 +143,16 @@ class WhiskeyFetcher(
         whiskeys: List<Whiskey>,
         environment: DataFetchingEnvironment,
     ): List<Whiskey> {
-        var filteredWhiskeys = whiskeys
         val filters = environment.getArgument("filters") as List<Map<*, *>>? ?: return whiskeys
+
+        var filteredWhiskeys = whiskeys
         filters.forEach { filter ->
             val field = filter["field"] as Map<*, *>
 
             // Filter by whiskey name, does not require comparator
             field["title"]?.let { title ->
                 filteredWhiskeys =
-                    filteredWhiskeys.filter {
-                            whiskey: Whiskey ->
+                    filteredWhiskeys.filter { whiskey: Whiskey ->
                         whiskey.title.contains(title as String, ignoreCase = true)
                     }
                 return@forEach
