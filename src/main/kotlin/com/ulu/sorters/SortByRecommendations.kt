@@ -3,7 +3,6 @@ package com.ulu.sorters
 import com.ulu.models.Whiskey
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
-import io.micronaut.http.client.annotation.Client
 import jakarta.inject.Singleton
 import java.net.URL
 
@@ -16,7 +15,8 @@ class SortByRecommendations {
         val client = HttpClient.create(URL(url))
 
         //Create the POST request
-        val request = HttpRequest.POST("/process", "{$id}")
+        val requestBody = mapOf("number" to id)
+        val request = HttpRequest.POST("/process", requestBody).contentType("application/json")
 
         val response = client.toBlocking().exchange(request, String::class.java)
 
