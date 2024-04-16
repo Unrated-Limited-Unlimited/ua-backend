@@ -7,59 +7,109 @@ enum SortType{
     #PERSONALIZED # Get "AI" recommended based on user preferences
 }
 
+enum Comparator {
+    LT, # Less than
+    GT, # Greater than
+    LE, # Less than or equal
+    GE, # Greater than or equal
+    EQ  # Equals
+}
+
+
 type Query{
-    getLoggedInUser : AuthUser # Use Authorization: Bearer JWT token
-    getUser(name: String) : User # Returns a User without Authentication for profile view
+    # Get logged in user using JWT
+    getLoggedInUser : AuthUser
+
+    # User starting with name used for profile view
+    getUser(name: String!) : User
+
+    # Get own thumb verdict from a rating/review
+    getThumb(ratingId: ID!) : Thumb
     getWhiskey(id: ID!) : Whiskey
     getRating(id: ID!) : Rating
-    getThumb(ratingId: ID!) : Thumb # Get own thumb verdict from a rating/review
 
-    getWhiskeys(sortType : SortType): [Whiskey]
+    # Get a list of whiskeys based on sortType seperated by paging: {page: 0, size: 10}
+    getWhiskeys(sort: Sort, filters: [Filter], paging: Paging): [Whiskey]
+
+    # Get a list of users that match the query name
+    getUsers(name: String!, paging: Paging) : [User]
+
+    # Get all created attribute categories
     getAttributeCategories : [AttributeCategory]
 }
 
 type Mutation{
-    editUser(user : EditUserInput) : AuthUser   #Verify user using JWT token
+    #Requires valid JWT token
+    editUser(user : EditUserInput) : AuthUser
     deleteUser : String
 
     createRating(whiskeyId: ID!, ratingInput : RatingInput!, attributeInputs: [AttributeInput]) : Rating
     editRating(id: ID!, ratingInput : RatingInput, attributeInputs: [AttributeInput]) : Rating
     deleteRating(id: ID!) : String
 
-    createThumb(ratingId: ID!, isGood: Boolean) : Thumb #User: ID! identified by JWT
-    editThumb(id: ID!, isGood: Boolean): Thumb
+    createThumb(ratingId: ID!, isGood: Boolean!) : Thumb #User: ID! identified by JWT
+    editThumb(id: ID!, isGood: Boolean!): Thumb
     deleteThumb(id: ID!) : String
 
     # Requires ROLE_ADMIN
-    createWhiskey(whiskeyInput : WhiskeyInput) : Whiskey
+    createWhiskey(whiskeyInput : WhiskeyInput!) : Whiskey
     editWhiskey(id: ID!, whiskeyInput : WhiskeyInput) : Whiskey
     deleteWhiskey(id: ID!) : String # Return "deleted" as confirmation
 
-    # Requires ROLE_ADMIN
-    createAttributeCategory(name: String) : AttributeCategory
+    createAttributeCategory(name: String!) : AttributeCategory
     editAttributeCategory(id:ID!, name: String) : AttributeCategory
     deleteAttributeCategory(id: ID!) : String
 }
 
 ######################################
 
+# Sort using a sorting type as defined in enum + reversed boolean
+input Sort{
+    sortType: SortType!
+    reverse: Boolean
+}
+
+# Filter whiskey using a comparator and a field value.
+input Filter {
+    comp: Comparator,
+    field: Field!
+}
+
+# What to compare against
+# Only the first one of these will be used for each given filter
+input Field {
+    title: String,            # Filter by whiskey name (does not need comparator)
+    avgScore: Float,          # Avg whiskey score
+    attribute: InputAttribute # Filter by an attribute
+}
+
+input InputAttribute{
+    id : Int!        # Attribute category ID
+    avgScore: Float! # Attribute average score value
+}
+
+input Paging{
+    page: Int = 0
+    size: Int = 10
+}
+
 input RatingInput{
-    title: String,
-    body: String,
-    score: Float,
+    title: String
+    body: String
+    score: Float
 }
 
 # Add attributes to reviews by giving attribute category id and a score value.
 # The category IDs can be found from Query::getAttributes()
 input AttributeInput{
-    id: ID!,
-    score: Float!,
+    id: ID!
+    score: Float!
 }
 
 input EditUserInput{
-    email: String,
-    password: String,
-    img: String,
+    email: String
+    password: String
+    img: String
 }
 
 input WhiskeyInput{

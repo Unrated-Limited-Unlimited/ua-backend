@@ -32,7 +32,7 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
     lateinit var adminPass: String
 
     @EventListener
-    @Requires(notEnv = ["prod"])
+    @Requires(notEnv = ["prod", "test"])
     fun onStartup(event: StartupEvent) {
         if (userDataRepository.getUserDataByName("Jeff") != null) {
             return
@@ -51,8 +51,8 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             )
         val user2 =
             UserData(
-                name = "Paul",
-                email = "pauling@gmail.com",
+                name = "Jimmy",
+                email = "jimmy@gmail.com",
                 password = AccountCreationService().hashPassword("42"),
                 img = "www.test.com/2.png",
             )
@@ -65,6 +65,15 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             Whiskey(img = "test.com/img", title = "Test", price = 199.6, summary = "its a whiskey", volume = 1.5, percentage = 99.9)
         val whiskey2 =
             Whiskey(img = "test2.com/img", title = "Test2", price = 5.0, summary = "it is another whiskey", volume = 0.4, percentage = 21.0)
+        val whiskey3 =
+            Whiskey(
+                img = "test3.com/img",
+                title = "Test3",
+                price = 100.0,
+                summary = "it is yet another whiskey",
+                volume = 0.5,
+                percentage = 20.0,
+            )
 
         // Create ratings
         val rating1 = Rating(body = "test", score = 0.1, title = "its drinkable", user = user1, whiskey = whiskey1)
@@ -88,6 +97,7 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
 
         dbService.save(whiskey1)
         dbService.save(whiskey2)
+        dbService.save(whiskey3)
 
         dbService.save(rating1)
         dbService.save(rating2)

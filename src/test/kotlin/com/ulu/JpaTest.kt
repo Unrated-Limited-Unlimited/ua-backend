@@ -1,6 +1,5 @@
 package com.ulu
 
-
 import com.ulu.models.*
 import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.WhiskeyRepository
@@ -14,18 +13,24 @@ import org.junit.jupiter.api.Assertions.*
  * Test class for testing JPA object functions/models/repositories.
  * */
 @MicronautTest(environments = ["test"])
-class JpaTest(private val databaseService: DatabaseService, private val whiskeyRepository: WhiskeyRepository, private val ratingRepository: RatingRepository) {
+class JpaTest(
+    private val databaseService: DatabaseService,
+    private val whiskeyRepository: WhiskeyRepository,
+    private val ratingRepository: RatingRepository,
+) {
     @Test
     fun test() {
-        val userData = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        val whiskey = Whiskey(
-            title = "test",
-            summary = "Its a test",
-            img = "owl.png",
-            percentage = 99.9,
-            price = 199.0,
-            volume = 10.0
-        )
+        val userData =
+            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        val whiskey =
+            Whiskey(
+                title = "test",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 199.0,
+                volume = 10.0,
+            )
         val rating =
             Rating(user = userData, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
         val thumb = Thumb(user = userData, rating = rating, isGood = true)
@@ -55,16 +60,18 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
     }
 
     @Test
-    fun removeChildTest(){
-        val userData = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        val whiskey = Whiskey(
-            title = "test",
-            summary = "Its a test",
-            img = "owl.png",
-            percentage = 99.9,
-            price = 199.0,
-            volume = 10.0
-        )
+    fun removeChildTest() {
+        val userData =
+            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        val whiskey =
+            Whiskey(
+                title = "test",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 199.0,
+                volume = 10.0,
+            )
         val rating =
             Rating(user = userData, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
@@ -87,10 +94,12 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
     }
 
     @Test
-    fun avgWhiskeyScoreTest(){
+    fun avgWhiskeyScoreTest() {
         val whiskey = Whiskey(img = "img", title = "Test", price = 100.0, summary = "Whiskey", volume = 2.0, percentage = 50.0)
-        val userData1 = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        val userData2 = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        val userData1 =
+            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        val userData2 =
+            UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
         val rating1 = Rating(user = userData1, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
         val rating2 = Rating(user = userData2, whiskey = whiskey, title = "Good", body = "This is an in-depth review.", score = 5.0)
 
@@ -112,14 +121,16 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
     }
 
     @Test
-    fun avgWhiskeyAttributeCategoryScoreTest(){
+    fun avgWhiskeyAttributeCategoryScoreTest() {
         val attributeCategory1 = AttributeCategory(name = "Apocalypse Suitability")
         val attributeCategory2 = AttributeCategory(name = "Expandability Rate")
 
         val whiskey = Whiskey(img = "img", title = "Test", price = 100.0, summary = "Whiskey", volume = 2.0, percentage = 50.0)
 
-        val userData1 = UserData(name = "John1", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        val userData2 = UserData(name = "John2", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        val userData1 =
+            UserData(name = "John1", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        val userData2 =
+            UserData(name = "John2", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
 
         val rating1 = Rating(user = userData1, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
         val rating2 = Rating(user = userData2, whiskey = whiskey, title = "Good", body = "This is an in-depth review.", score = 5.0)
@@ -139,5 +150,38 @@ class JpaTest(private val databaseService: DatabaseService, private val whiskeyR
         whiskey.calculateAvgAttributeCategoryScore()
         assertEquals(attributeCategory1.avgScore, 3.5)
         assertEquals(attributeCategory2.avgScore, 5.0)
+    }
+
+    @Test
+    fun avgAttributeCategoryScoreTest() {
+        val attributeCategory = AttributeCategory(name = "Cool Level")
+        val userData1 =
+            UserData(
+                name = "John1",
+                password = AccountCreationService().hashPassword("321"),
+                email = "test@proton.com",
+                img = "img.txt",
+            )
+
+        val whiskey =
+            Whiskey(img = "img", title = "Test", price = 100.0, summary = "Whiskey", volume = 2.0, percentage = 50.0)
+
+        val rating =
+            Rating(
+                user = userData1,
+                whiskey = whiskey,
+                title = "Mid",
+                body = "This is an in-depth review.",
+                score = 2.0,
+            )
+
+        val attribute1 = Attribute(score = 0.4, category = attributeCategory, rating = rating)
+        val attribute2 = Attribute(score = 0.6, category = attributeCategory, rating = rating)
+        attributeCategory.attributes.add(attribute1)
+        attributeCategory.attributes.add(attribute2)
+
+        assertEquals(0.0, attributeCategory.avgScore)
+        attributeCategory.calculateAvgScore()
+        assertEquals(0.5, attributeCategory.avgScore)
     }
 }
