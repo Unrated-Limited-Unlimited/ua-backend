@@ -26,9 +26,11 @@ class ImageController(
     fun whiskeyImagePost(
         @PathVariable id: String,
         @Part("file") fileUpload: CompletedFileUpload,
-    ): Any? {
+    ): HttpResponse<String> {
         // Only admins can upload whiskey photos
-        requestValidatorService.verifyAdmin(securityService)
+        if (!requestValidatorService.isAdmin(securityService)) {
+            return HttpResponse.unauthorized()
+        }
 
         // Verify size and type of upload.
         val failedCheck = uploadService.verifyUpload(fileUpload)
@@ -55,7 +57,7 @@ class ImageController(
         } catch (e: Exception) {
             println("Error uploading:")
             println(e)
-            return HttpResponse.serverError("Error uploading profile image.")
+            return HttpResponse.serverError("Error uploading whiskey image to file storage.")
         }
     }
 
@@ -89,7 +91,7 @@ class ImageController(
         } catch (e: Exception) {
             println("Error uploading:")
             println(e)
-            return HttpResponse.serverError("Error uploading profile image.")
+            return HttpResponse.serverError("Error uploading profile image to file storage.")
         }
     }
 }
