@@ -55,9 +55,9 @@ class WhiskeyFetcher(
             whiskeys = filterWhiskeysByComparator(whiskeys, environment)
 
             // Sort whiskeys
-            val sort = environment.getArgument("sort") as Map<*, *>
+            val sort = environment.getArgument("sort") as Map<*, *>?
             val sortedWhiskey =
-                sort["sortType"].let {
+                sort?.get("sortType").let {
                     when (it) {
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
@@ -68,7 +68,7 @@ class WhiskeyFetcher(
                 }
 
             // Reverse sorted list
-            val isReversed = sort["reverse"] as Boolean?
+            val isReversed = sort?.get("reverse") as Boolean?
             if (isReversed != null && isReversed) {
                 return@DataFetcher sortedWhiskey.reversed()
             }
