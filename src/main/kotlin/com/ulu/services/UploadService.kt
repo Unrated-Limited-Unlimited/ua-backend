@@ -36,11 +36,10 @@ class UploadService {
      * */
     fun verifyUpload(fileUpload: CompletedFileUpload): HttpResponse<String>? {
         val imageBytes = fileUpload.bytes
+        println("Received image with size: ${imageBytes.size} bytes")
         if (fileUpload.contentType.get().name != MediaType.IMAGE_JPEG) {
             return HttpResponse.badRequest("MediaType must be of ${MediaType.IMAGE_JPEG}")
         }
-        println(fileUpload.filename)
-
         if (!fileUpload.filename.endsWith(".jpeg", ignoreCase = true) && !fileUpload.filename.endsWith(".jpg", ignoreCase = true)) {
             return HttpResponse.badRequest("Uploaded file must be of filetype jpeg/jpg!")
         }

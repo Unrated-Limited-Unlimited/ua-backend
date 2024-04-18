@@ -31,11 +31,10 @@ class ImageController(
         requestValidatorService.verifyAdmin(securityService)
 
         // Verify size and type of upload.
-        val check = uploadService.verifyUpload(fileUpload)
-        if (check != null) {
-            return check
+        val failedCheck = uploadService.verifyUpload(fileUpload)
+        if (failedCheck != null) {
+            return failedCheck
         }
-        println("Received image with size: ${fileUpload.bytes.size} bytes")
 
         try {
             val username = securityService.authentication.get().name
@@ -65,11 +64,10 @@ class ImageController(
         @Part("file") fileUpload: CompletedFileUpload,
     ): HttpResponse<String> {
         // Verify size and type of upload.
-        val check = uploadService.verifyUpload(fileUpload)
-        if (check != null) {
-            return check
+        val failedCheck = uploadService.verifyUpload(fileUpload)
+        if (failedCheck != null) {
+            return failedCheck
         }
-        println("Received image with size: ${fileUpload.bytes.size} bytes")
 
         try {
             val username = securityService.authentication.get().name
