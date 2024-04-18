@@ -17,6 +17,10 @@ import io.swagger.v3.oas.annotations.parameters.RequestBody
 import io.swagger.v3.oas.annotations.responses.ApiResponse
 import java.net.URI
 
+/**
+ * Documentation class for creating OpenAPI docs for endpoints that are pre-implemented.
+ * To avoid overshadowing of the real endpoints, a hidden character \u200E is used.
+ * */
 @Controller
 class DocsController {
     @Secured(SecurityRule.IS_ANONYMOUS)
