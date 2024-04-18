@@ -12,7 +12,13 @@ import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.DefaultSecurityService
 
 /**
- * REST endpoints for uploading image to the file storage microservice.
+ * REST endpoints for uploading images to the file storage microservice.
+ *
+ * Users must be logged in to upload images.
+ * They can upload a profile image, and it will be stored in the file storage at:
+ * "/api/img/{prefix}{user.id}" where prefix is "p" for profile image and "w" for whiskey.
+ *
+ * Only admins can upload Whiskey images.
  * */
 @Secured(SecurityRule.IS_AUTHENTICATED)
 @Controller
@@ -31,7 +37,6 @@ class ImageController(
         if (!requestValidatorService.isAdmin(securityService)) {
             return HttpResponse.unauthorized()
         }
-
         // Verify size and type of upload.
         val failedCheck = uploadService.verifyUpload(fileUpload)
         if (failedCheck != null) {
@@ -39,21 +44,14 @@ class ImageController(
         }
 
         try {
-            val username = securityService.authentication.get().name
-            val user = userDataRepository.getUserDataByName(username)
-            if (user == null) {
-                return HttpResponse.badRequest("No user found for the provided credentials.")
-            } else {
-                val response =
-                    uploadService.upload(fileUpload.bytes, "w", id).block()
-                        ?: return HttpResponse.serverError("Response is null from file server.")
+            val response =
+                uploadService.upload(fileUpload.bytes, "w", id).block()
+                    ?: return HttpResponse.serverError("Response is null from file server.")
 
-                if (response.code() != 200) {
-                    return HttpResponse.serverError("Could not upload image to file storage ${response.code()}")
-                }
-
-                return HttpResponse.ok("Image successfully uploaded with status: ${response.status}")
+            if (response.code() != 200) {
+                return HttpResponse.serverError("Could not upload image to file storage ${response.code()}")
             }
+            return HttpResponse.ok("Image successfully uploaded with status: ${response.status}")
         } catch (e: Exception) {
             println("Error uploading:")
             println(e)
@@ -85,7 +83,6 @@ class ImageController(
                 if (response.code() != 200) {
                     return HttpResponse.serverError("Could not upload image to file storage ${response.code()}")
                 }
-
                 return HttpResponse.ok("Image successfully uploaded with status: ${response.status}")
             }
         } catch (e: Exception) {

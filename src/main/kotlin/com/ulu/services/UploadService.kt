@@ -16,7 +16,7 @@ class UploadService {
     private val maxImageSizeByte = maxImageSizeMb * 1024 * 1024
 
     @Inject
-    @field:Client("http://localhost:8001")
+    @field:Client("http://localhost:8001") // Base url for file storage server.
     lateinit var client: HttpClient
 
     /**
