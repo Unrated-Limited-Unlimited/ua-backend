@@ -31,7 +31,6 @@ class WhiskeyFetcher(
             whiskey.calculateAvgScore()
             whiskey.categories = attributeCategoryRepository.findByWhiskeyId(whiskey.id!!)
             whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
-            whiskey.calculateAvgAttributeCategoryScore()
 
             return@DataFetcher whiskey
         }
@@ -45,10 +44,9 @@ class WhiskeyFetcher(
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
-                it.calculateAvgScore()
-                it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!)
-                it.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
-                it.calculateAvgAttributeCategoryScore()
+                it.calculateAvgScore() // Calculate average score for each whiskey
+                it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!) // Get all attribute categories used for this whiskey.
+                it.categories.map { a: AttributeCategory -> a.calculateAvgScore(it.id) } // Calculate average attribute score for whiskeys
             }
 
             // Filter whiskeys based on filters input

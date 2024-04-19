@@ -15,7 +15,9 @@ class AttributeCategoryFetcher(
 ) {
     fun getAttributeCategories(): DataFetcher<List<AttributeCategory>> {
         return DataFetcher {
-            return@DataFetcher attributeCategoryRepository.findAll()
+            val categories = attributeCategoryRepository.findAll()
+            categories.forEach { it.calculateAvgScore() }
+            return@DataFetcher categories
         }
     }
 

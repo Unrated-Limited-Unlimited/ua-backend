@@ -122,38 +122,6 @@ class JpaTest(
     }
 
     @Test
-    fun avgWhiskeyAttributeCategoryScoreTest() {
-        val attributeCategory1 = AttributeCategory(name = "Apocalypse Suitability")
-        val attributeCategory2 = AttributeCategory(name = "Expandability Rate")
-
-        val whiskey = Whiskey(img = "img", title = "Test", price = 100.0, summary = "Whiskey", volume = 2.0, percentage = 50.0)
-
-        val userData1 =
-            UserData(name = "John1", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        val userData2 =
-            UserData(name = "John2", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
-
-        val rating1 = Rating(user = userData1, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
-        val rating2 = Rating(user = userData2, whiskey = whiskey, title = "Good", body = "This is an in-depth review.", score = 5.0)
-
-        val attribute1 = Attribute(rating = rating1, category = attributeCategory1, score = 2.0)
-        val attribute2 = Attribute(rating = rating1, category = attributeCategory2, score = 5.0)
-        val attribute3 = Attribute(rating = rating2, category = attributeCategory1, score = 5.0)
-
-        // Simulate adding to JPA
-        rating1.attributes.add(attribute1)
-        rating1.attributes.add(attribute2)
-        rating2.attributes.add(attribute3)
-
-        whiskey.ratings.add(rating1)
-        whiskey.ratings.add(rating2)
-
-        whiskey.calculateAvgAttributeCategoryScore()
-        assertEquals(attributeCategory1.avgScore, 3.5)
-        assertEquals(attributeCategory2.avgScore, 5.0)
-    }
-
-    @Test
     fun avgAttributeCategoryScoreTest() {
         val attributeCategory = AttributeCategory(name = "Cool Level")
         val userData1 =

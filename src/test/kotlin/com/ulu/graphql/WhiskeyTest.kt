@@ -2,9 +2,7 @@ package com.ulu.graphql
 
 import com.nimbusds.jwt.JWTParser
 import com.nimbusds.jwt.SignedJWT
-import com.ulu.models.Rating
-import com.ulu.models.UserData
-import com.ulu.models.Whiskey
+import com.ulu.models.*
 import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
@@ -34,6 +32,8 @@ class WhiskeyTest(
     private var rating1: Rating? = null
     private var rating2: Rating? = null
     private var rating3: Rating? = null
+    private var attributeCategory: AttributeCategory? = null
+    private var attribute: Attribute? = null
 
     @BeforeEach
     fun setup() {
@@ -101,6 +101,9 @@ class WhiskeyTest(
         rating3 =
             Rating(user = adminUser, whiskey = whiskey2, title = "Bad", body = "This is an in-depth review.", score = 0.1)
 
+        attributeCategory = AttributeCategory(name = "No Taste - Giga Taste")
+        attribute = Attribute(category = attributeCategory!!, rating = rating1!!, score = 0.6)
+
         databaseService.save(adminUser)
         databaseService.save(user)
         databaseService.save(whiskey1)
@@ -110,6 +113,8 @@ class WhiskeyTest(
         databaseService.save(rating1)
         databaseService.save(rating2)
         databaseService.save(rating3)
+        databaseService.save(attributeCategory)
+        databaseService.save(attribute)
     }
 
     @AfterEach
@@ -145,8 +150,9 @@ class WhiskeyTest(
 
     @Test
     fun getWhiskeysFilteredSortedTest() {
+        println(attribute!!.id)
         val query =
-            """ { "query": "{ getWhiskeys(sort: {sortType: PRICE, reverse: false}, filters: [ {comp: GT, field: { avgScore: 0.1 }}, {field: { title: \"est\" }} ]) { id, title, avgScore, ratings { user{name}, body } } }" }" """
+            """ { "query": "{ getWhiskeys(sort: {sortType: PRICE, reverse: false}, filters: [ {comp: GT, field: { attribute: { id: ${attributeCategory!!.id}, avgScore: 0.5} }}, {field: { title: \"est\" }} ]) { id, title, avgScore, ratings { user{name}, body } } }" }" """
         val body = makeRequest(query, adminUser!!)
         assertNotNull(body)
 
@@ -156,7 +162,7 @@ class WhiskeyTest(
 
         val whiskeys = whiskeyInfo["getWhiskeys"] as List<*>
 
-        assertEquals(2, whiskeys.size)
+        assertEquals(1, whiskeys.size)
 
         val whiskeyById = whiskeys[0] as Map<*, *>
 
