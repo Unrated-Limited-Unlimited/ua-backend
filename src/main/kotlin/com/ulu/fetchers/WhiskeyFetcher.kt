@@ -3,6 +3,8 @@ package com.ulu.fetchers
 import com.ulu.models.AttributeCategory
 import com.ulu.models.Whiskey
 import com.ulu.repositories.AttributeCategoryRepository
+import com.ulu.repositories.RatingRepository
+import com.ulu.repositories.UserDataRepository
 import com.ulu.repositories.WhiskeyRepository
 import com.ulu.services.RequestValidatorService
 import com.ulu.sorters.SortByBestRating
@@ -17,6 +19,8 @@ import jakarta.inject.Singleton
 @Singleton
 class WhiskeyFetcher(
     private val whiskeyRepository: WhiskeyRepository,
+    private val ratingRepository: RatingRepository,
+    private val userDataRepository: UserDataRepository,
     private val attributeCategoryRepository: AttributeCategoryRepository,
     private val securityService: DefaultSecurityService,
 ) {
@@ -33,6 +37,11 @@ class WhiskeyFetcher(
             whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
             whiskey.calculateAvgAttributeCategoryScore()
 
+            // Populate the review whiskey field if user is logged in.
+            if (securityService.authentication.isPresent) {
+                val user = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
+                whiskey.review = ratingRepository.findByWhiskeyIdAndUserId(whiskey.id, user.id!!)
+            }
             return@DataFetcher whiskey
         }
     }
