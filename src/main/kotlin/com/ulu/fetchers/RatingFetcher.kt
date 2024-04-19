@@ -39,9 +39,15 @@ class RatingFetcher(
                 error("No whiskey with id $whiskeyId.")
             }
             val ratingInput = environment.getArgument("ratingInput") as Map<String, *>
-            val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name)
+            val userData = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
 
             // Create the rating
+            if (userData.id != null) {
+                if (ratingRepository.existsByWhiskeyIdAndUserId(whiskeyId, userData.id)) {
+                    error("Can not create multiple reviews for the same whiskey.")
+                }
+            }
+
             val rating =
                 Rating(
                     user = userData,
