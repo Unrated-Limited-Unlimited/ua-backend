@@ -19,6 +19,8 @@ class Whiskey(
     ) var ratings: MutableList<Rating> = mutableListOf(),
     // Used when serializing to GraphQL
     @Transient
+    var review: Rating? = null, // Will be populated if user has rated this whiskey.
+    @Transient
     var categories: List<AttributeCategory> = mutableListOf(),
     var avgScore: Double = 0.0,
 ) {

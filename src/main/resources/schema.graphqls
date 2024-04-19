@@ -163,6 +163,7 @@ type Whiskey{
     volume: Float
     percentage: Float
 
+    review: Rating # If a user has already rated a whiskey, this field will be populated on getWhiskey().
     ratings: [Rating]
     avgScore: Float # Average score of all ratings
 

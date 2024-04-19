@@ -27,7 +27,9 @@ class RatingTest(
     private val accountService: AccountService,
 ) {
     private var user: UserData? = null
-    private var whiskey: Whiskey? = null
+    private var whiskey1: Whiskey? = null
+    private var whiskey2: Whiskey? = null
+    private var whiskey3: Whiskey? = null
     private var rating: Rating? = null
     private var attributeCategory: AttributeCategory? = null
 
@@ -40,7 +42,7 @@ class RatingTest(
                 email = "test@proton.com",
                 img = "img.txt",
             )
-        whiskey =
+        whiskey1 =
             Whiskey(
                 title = "test",
                 summary = "Its a test",
@@ -49,13 +51,36 @@ class RatingTest(
                 price = 199.0,
                 volume = 10.0,
             )
+
+        whiskey2 =
+            Whiskey(
+                title = "test2",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 5.0,
+                price = 100.0,
+                volume = 10.0,
+            )
+
+        whiskey3 =
+            Whiskey(
+                title = "test3",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 2.9,
+                price = 145.0,
+                volume = 10.0,
+            )
+
         rating =
-            Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 0.6)
+            Rating(user = user, whiskey = whiskey1, title = "Mid", body = "This is an in-depth review.", score = 0.6)
 
         attributeCategory = AttributeCategory(name = "Epic Level")
 
         databaseService.save(user)
-        databaseService.save(whiskey)
+        databaseService.save(whiskey1)
+        databaseService.save(whiskey2)
+        databaseService.save(whiskey3)
         databaseService.save(rating)
         databaseService.save(attributeCategory)
     }
@@ -82,7 +107,7 @@ class RatingTest(
         assertEquals(rating?.score, ratingMap["score"])
 
         val whiskeyMap = ratingMap["whiskey"] as Map<*, *>
-        assertEquals(whiskey?.title, whiskeyMap["title"])
+        assertEquals(whiskey1?.title, whiskeyMap["title"])
 
         val userMap = ratingMap["user"] as Map<*, *>
         assertEquals(user?.name, userMap["name"])
@@ -106,7 +131,7 @@ class RatingTest(
     @Test
     fun createRatingTest() {
         val query =
-            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 0.4 }) { id, title, body, score } }" }" """
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey2?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 0.4 }) { id, title, body, score } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
@@ -122,7 +147,7 @@ class RatingTest(
     @Test
     fun createRatingWithAttributesTest() {
         val query =
-            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 1.0 }, attributeInputs: [{id: ${attributeCategory?.id}, score: 0.4}]) { id, title, body, score, attributes{score} } }" }" """
+            """ { "query": "mutation{ createRating(whiskeyId: \"${whiskey3?.id}\", ratingInput: {title: \"New rating of whiskey!\", body: \"A whiskey rating\", score: 1.0 }, attributeInputs: [{id: ${attributeCategory?.id}, score: 0.4}]) { id, title, body, score, attributes{score} } }" }" """
         val body = makeRequest(query)
         assertNotNull(body)
 
