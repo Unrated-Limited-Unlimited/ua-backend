@@ -15,7 +15,7 @@ import io.micronaut.security.utils.DefaultSecurityService
  * REST endpoints for uploading images to the file storage microservice.
  *
  * Users must be logged in to upload images.
- * They can upload a profile image, and it will be stored in the file storage at:
+ * They can upload a profile image, and it will be stored as a jpg file storage at:
  * "/api/img/{prefix}{user.id}" where prefix is "p" for profile image and "w" for whiskey.
  *
  * Only admins can upload Whiskey images.
@@ -37,15 +37,20 @@ class ImageController(
         if (!requestValidatorService.isAdmin(securityService)) {
             return HttpResponse.unauthorized()
         }
-        // Verify size and type of upload.
-        val failedCheck = uploadService.verifyUpload(fileUpload)
-        if (failedCheck != null) {
-            return failedCheck
+
+        // Verify type of upload.
+        if (!uploadService.isUploadedFileImage(fileUpload)) {
+            return HttpResponse.badRequest("File must be an image")
         }
+
+        // Convert file to jpg byte array
+        val byteArray =
+            uploadService.imageToJpegByteArray(fileUpload.bytes)
+                ?: return HttpResponse.serverError("Could not convert file to jpg.")
 
         try {
             val response =
-                uploadService.upload(fileUpload.bytes, "w", id).block()
+                uploadService.upload(byteArray, "w", id).block()
                     ?: return HttpResponse.serverError("Response is null from file server.")
 
             if (response.code() != 200) {
@@ -63,11 +68,15 @@ class ImageController(
     fun profileImagePost(
         @Part("file") fileUpload: CompletedFileUpload,
     ): HttpResponse<String> {
-        // Verify size and type of upload.
-        val failedCheck = uploadService.verifyUpload(fileUpload)
-        if (failedCheck != null) {
-            return failedCheck
+        // Verify type of upload.
+        if (!uploadService.isUploadedFileImage(fileUpload)) {
+            return HttpResponse.badRequest("File must be an image")
         }
+
+        // Convert file to jpg byte array
+        val jpgBytes =
+            uploadService.imageToJpegByteArray(fileUpload.bytes)
+                ?: return HttpResponse.serverError("Could not convert file to jpg.")
 
         try {
             val username = securityService.authentication.get().name
@@ -77,7 +86,7 @@ class ImageController(
             } else {
                 val id = user.id.toString()
                 val response =
-                    uploadService.upload(fileUpload.bytes, "p", id).block()
+                    uploadService.upload(jpgBytes, "p", id).block()
                         ?: return HttpResponse.serverError("Response is null from file server.")
 
                 if (response.code() != 200) {

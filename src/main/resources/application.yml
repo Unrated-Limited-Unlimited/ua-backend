@@ -25,6 +25,11 @@ micronaut:
             - "/logout"
             - "/register"
             - "/graphql"
+
+    multipart:
+      enabled: true
+      max-file-size: 10485760 # 10MB limit in bytes
+
   security:
     token:
       jwt:
