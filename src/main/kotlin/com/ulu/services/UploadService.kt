@@ -44,8 +44,6 @@ class UploadService {
      * Convert the uploaded image file to jpeg byte array.
      * */
     fun imageToJpegByteArray(imageBytes: ByteArray): ByteArray? {
-        println(imageBytes.size)
-
         // Convert ByteArray to BufferedImage
         val inputStream = ByteArrayInputStream(imageBytes)
         val image: BufferedImage? = ImageIO.read(inputStream)

@@ -28,14 +28,13 @@ import io.micronaut.security.utils.DefaultSecurityService
 class AuthController(
     private val securityService: DefaultSecurityService,
     private val userDataRepository: UserDataRepository,
-    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository
+    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository,
 ) {
     // Default /login uses username instead of name
     data class RegisterDTO(
         val username: String,
         val password: String,
         val email: String,
-        val img: String?
     )
 
     @Secured(SecurityRule.IS_AUTHENTICATED)
@@ -48,7 +47,9 @@ class AuthController(
 
     @Secured(SecurityRule.IS_ANONYMOUS)
     @Post("/register")
-    fun register(@Body registerData: RegisterDTO): HttpResponse<*> {
+    fun register(
+        @Body registerData: RegisterDTO,
+    ): HttpResponse<*> {
         if (userDataRepository.existsByName(registerData.username)) {
             return HttpResponse.badRequest("Username already taken!")
         }
@@ -60,12 +61,12 @@ class AuthController(
         }
 
         // Create new account
-        val userData = UserData(
-            name = registerData.username,
-            password = AccountCreationService().hashPassword(registerData.password),
-            email = registerData.email,
-            img = registerData.img
-        )
+        val userData =
+            UserData(
+                name = registerData.username,
+                password = AccountCreationService().hashPassword(registerData.password),
+                email = registerData.email,
+            )
         userDataRepository.save(userData)
 
         return HttpResponse.created("New account created.")

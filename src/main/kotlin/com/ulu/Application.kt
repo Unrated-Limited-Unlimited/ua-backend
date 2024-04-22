@@ -47,7 +47,6 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
                 name = "Jeff",
                 email = "jeff@bank.no",
                 password = AccountCreationService().hashPassword("123"),
-                img = "www.test.com/1.png",
             )
         val user2 =
             UserData(

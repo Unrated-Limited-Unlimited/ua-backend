@@ -81,6 +81,7 @@ class ImageController(
         try {
             val username = securityService.authentication.get().name
             val user = userDataRepository.getUserDataByName(username)
+
             return if (user == null) {
                 HttpResponse.badRequest("No user found for the provided credentials.")
             } else {
@@ -92,6 +93,10 @@ class ImageController(
                 if (response.code() != 200) {
                     return HttpResponse.serverError("Could not upload image to file storage ${response.code()}")
                 }
+                // Update user image
+                user.img = "p$id"
+                userDataRepository.update(user)
+
                 HttpResponse.ok("Image successfully uploaded with status: ${response.status}")
             }
         } catch (e: Exception) {
