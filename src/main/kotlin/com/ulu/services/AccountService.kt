@@ -46,7 +46,6 @@ class AccountService(
                 name = registerData.username,
                 password = hashPassword(registerData.password),
                 email = registerData.email,
-                img = registerData.img,
             )
         return AccountCreationResult.Success("New account created.", userDataRepository.save(userData))
     }

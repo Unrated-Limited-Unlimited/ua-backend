@@ -50,7 +50,6 @@ class UserDataFetcher(
                     userMap["name"] as String,
                     userMap["password"] as String,
                     userMap["email"] as String,
-                    userMap["img"] as String,
                 )
             // Create account.
             return@DataFetcher when (val result = accountService.registerNewAccount(registerData)) {

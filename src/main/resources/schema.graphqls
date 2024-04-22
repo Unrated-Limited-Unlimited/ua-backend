@@ -111,13 +111,11 @@ input CreateUserInput{
     name: String!
     email: String!
     password: String!
-    img: String!
 }
 
 input EditUserInput{
     email: String
     password: String
-    img: String # Deprecated; Image is updated through POST img/profile
 }
 
 input WhiskeyInput{
