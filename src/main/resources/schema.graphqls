@@ -117,7 +117,7 @@ input CreateUserInput{
 input EditUserInput{
     email: String
     password: String
-    img: String
+    img: String # Deprecated; Image is updated through POST img/profile
 }
 
 input WhiskeyInput{

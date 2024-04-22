@@ -81,10 +81,6 @@ class UserDataFetcher(
                 }
                 userData.password = accountService.hashPassword(newPass)
             }
-
-            editUserMap["img"]?.let { newImg ->
-                userData.img = newImg as String
-            }
             // Revoke all issued jwt tokens
             jwtRefreshTokenRepository.updateRevokedByUsername(username, true)
             return@DataFetcher userDataRepository.update(userData)

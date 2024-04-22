@@ -7,13 +7,12 @@ plugins {
     id("io.micronaut.application") version "4.3.2"
     id("io.micronaut.test-resources") version "4.3.2"
     id("io.micronaut.aot") version "4.3.2"
-    id("io.swagger.core.v3.swagger-gradle-plugin") version "2.2.21"
 }
 
 version = "0.1"
 group = "com.ulu"
 
-val kotlinVersion = project.properties.get("kotlinVersion")
+val kotlinVersion = project.properties["kotlinVersion"]
 repositories {
     mavenCentral()
 }
@@ -37,19 +36,14 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
-
-    implementation("io.swagger.core.v3:swagger-core")
-
     compileOnly("io.micronaut:micronaut-http-client")
     compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
+
     runtimeOnly("org.postgresql:postgresql")
 
-    // For testing JPA local
-    runtimeOnly("com.h2database:h2")
-
-    annotationProcessor("io.micronaut.openapi:micronaut-openapi")
+    runtimeOnly("com.h2database:h2") // For testing JPA local
 
     testImplementation("io.micronaut:micronaut-http-client")
     aotPlugins(platform("io.micronaut.platform:micronaut-platform:4.3.2"))
