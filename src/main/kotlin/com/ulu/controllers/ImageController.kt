@@ -18,7 +18,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
  * REST endpoints for uploading images to the file storage microservice.
  *
  * Users must be logged in to upload images.
- * They can upload a profile image, and it will be stored in the file storage at:
+ * They can upload a profile image, and it will be stored in the file storage as a jpg:
  * "/api/img/{prefix}{user.id}" where prefix is "p" for profile image and "w" for whiskey.
  *
  * Only admins can upload Whiskey images.
