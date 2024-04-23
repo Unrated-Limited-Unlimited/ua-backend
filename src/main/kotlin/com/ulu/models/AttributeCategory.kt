@@ -19,10 +19,8 @@ class AttributeCategory(
         var totalScore = 0.0
         var count = 0
         this.attributes.forEach { attribute: Attribute ->
-            if (whiskeyId != null) {
-                if (whiskeyId != attribute.rating.whiskey?.id) {
-                    return@forEach
-                }
+            if (whiskeyId != null && whiskeyId != attribute.rating.whiskey?.id) {
+                return@forEach
             }
             totalScore += attribute.score
             count++

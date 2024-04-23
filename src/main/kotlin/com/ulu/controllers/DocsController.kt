@@ -24,6 +24,8 @@ import java.net.URI
  * */
 @Controller
 class DocsController {
+    private val dummyResponse = "This is a documentation endpoint."
+
     @Secured(SecurityRule.IS_ANONYMOUS)
     @Post("/login\u200E")
     @Operation(
@@ -43,7 +45,7 @@ class DocsController {
         @Body loginRequest: LoginRequest,
     ): HttpResponse<*> {
         // The /login is provided by micronaut security, this is just for OpenAPI documentation.
-        return HttpResponse.badRequest("This is a documentation endpoint.")
+        return HttpResponse.badRequest(dummyResponse)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
@@ -68,7 +70,7 @@ class DocsController {
         @Body tokenRefreshRequest: TokenRefreshRequest,
     ): HttpResponse<*> {
         // This is just a dummy for creating docs, actual implementation provided by micronaut security
-        return HttpResponse.badRequest("This is a documentation endpoint.")
+        return HttpResponse.badRequest(dummyResponse)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
@@ -83,7 +85,7 @@ class DocsController {
     @RequestBody(required = true)
     fun dummyGraphql(): HttpResponse<*> {
         // This is just a dummy for creating docs for the real /graphql
-        return HttpResponse.badRequest("This is a documentation endpoint.")
+        return HttpResponse.badRequest(dummyResponse)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
