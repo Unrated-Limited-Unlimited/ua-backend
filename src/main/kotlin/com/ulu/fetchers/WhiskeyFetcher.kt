@@ -2,10 +2,7 @@ package com.ulu.fetchers
 
 import com.ulu.models.AttributeCategory
 import com.ulu.models.Whiskey
-import com.ulu.repositories.AttributeCategoryRepository
-import com.ulu.repositories.RatingRepository
-import com.ulu.repositories.UserDataRepository
-import com.ulu.repositories.WhiskeyRepository
+import com.ulu.repositories.*
 import com.ulu.services.RequestValidatorService
 import com.ulu.sorters.SortByBestRating
 import com.ulu.sorters.SortByPrice
@@ -15,12 +12,14 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
+import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class WhiskeyFetcher(
     private val whiskeyRepository: WhiskeyRepository,
     private val ratingRepository: RatingRepository,
     private val userDataRepository: UserDataRepository,
+    private val thumbRepository: ThumbRepository,
     private val attributeCategoryRepository: AttributeCategoryRepository,
     private val securityService: DefaultSecurityService,
 ) {
@@ -36,11 +35,22 @@ class WhiskeyFetcher(
             whiskey.categories = attributeCategoryRepository.findByWhiskeyId(whiskey.id!!)
             whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
 
-            // Populate the review whiskey field if user is logged in.
             if (securityService.authentication.isPresent) {
                 val user = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
+
+                // Populate the review whiskey field if user is logged in.
                 whiskey.review = ratingRepository.findByWhiskeyIdAndUserId(whiskey.id, user.id!!)
+
+                // For each rating add the thumb rating that belongs to the user as votedThumb
+                whiskey.ratings.forEach { rating -> rating.votedThumb = thumbRepository.getByRatingAndUser(rating, user).getOrNull() }
             }
+
+            // Calculate the amount of good and bad thumbs for each rating
+            whiskey.ratings.forEach { rating ->
+                rating.goodThumbs = rating.thumbs.filter { it.isGood }.size
+                rating.badThumbs = rating.thumbs.filter { !it.isGood }.size
+            }
+
             return@DataFetcher whiskey
         }
     }

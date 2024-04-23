@@ -2,6 +2,7 @@ package com.ulu.controllers
 
 import com.ulu.dto.LoginRequest
 import io.micronaut.http.HttpResponse
+import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Get
 import io.micronaut.http.annotation.Post
@@ -23,6 +24,8 @@ import java.net.URI
  * */
 @Controller
 class DocsController {
+    private val dummyResponse = "This is a documentation endpoint."
+
     @Secured(SecurityRule.IS_ANONYMOUS)
     @Post("/login\u200E")
     @Operation(
@@ -38,9 +41,11 @@ class DocsController {
     )
     @ApiResponse(responseCode = "200", description = "Login successful.")
     @ApiResponse(responseCode = "401", description = "Bad request if username or password is missing, or invalid user credentials.")
-    fun dummyLogin(): HttpResponse<*> {
+    fun dummyLogin(
+        @Body loginRequest: LoginRequest,
+    ): HttpResponse<*> {
         // The /login is provided by micronaut security, this is just for OpenAPI documentation.
-        return HttpResponse.badRequest("This is a documentation endpoint.")
+        return HttpResponse.badRequest(dummyResponse)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
@@ -61,9 +66,11 @@ class DocsController {
             "Invalid request if missing refresh_token and grant_type." +
                 "\nInvalid grant if refresh token is invalid",
     )
-    fun dummyOauthAccessToken(): HttpResponse<*> {
+    fun dummyOauthAccessToken(
+        @Body tokenRefreshRequest: TokenRefreshRequest,
+    ): HttpResponse<*> {
         // This is just a dummy for creating docs, actual implementation provided by micronaut security
-        return HttpResponse.badRequest("This is a documentation endpoint.")
+        return HttpResponse.badRequest(dummyResponse)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
@@ -78,7 +85,7 @@ class DocsController {
     @RequestBody(required = true)
     fun dummyGraphql(): HttpResponse<*> {
         // This is just a dummy for creating docs for the real /graphql
-        return HttpResponse.badRequest("This is a documentation endpoint.")
+        return HttpResponse.badRequest(dummyResponse)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
