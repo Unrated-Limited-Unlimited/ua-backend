@@ -180,6 +180,10 @@ type Rating{
     createdAt: String
 
     thumbs: [Thumb]
+
+    votedThumb: Thumb # This will be populated when getWhiskey is used and user has liked a the rating.
+    goodThumbs: Int # Populated when getWhiskey is used and counts thumbs that isGood is true
+    badThumbs: Int # Populated when getWhiskey is used and counts thumbs that isGood is false
 }
 
 type Thumb{
