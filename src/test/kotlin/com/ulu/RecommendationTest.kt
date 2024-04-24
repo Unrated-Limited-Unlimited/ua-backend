@@ -7,7 +7,7 @@ import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
 import org.junit.jupiter.api.Test
 
-@MicronautTest
+@MicronautTest(environments = ["prod"])
 class RecommendationTest(private val whiskeyRepository: WhiskeyRepository) {
 
     @Inject
