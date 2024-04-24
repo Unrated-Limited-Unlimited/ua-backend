@@ -2,7 +2,7 @@ package com.ulu
 
 import com.ulu.models.*
 import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.context.annotation.Requires
 import io.micronaut.context.annotation.Value
@@ -17,22 +17,31 @@ import jakarta.inject.Singleton
     info =
         Info(
             title = "unrated",
-            version = "0.0",
+            version = "1.0",
         ),
 )
-object Api
+object Api {
+    @JvmStatic
+    fun main(args: Array<String>) {
+        run(Api.javaClass)
+    }
+}
 
 fun main(args: Array<String>) {
     run(*args)
 }
 
 @Singleton
-class TestDataCreator(private val dbService: DatabaseService, private val userDataRepository: UserDataRepository) {
+class TestDataCreator(
+    private val dbService: DatabaseService,
+    private val userDataRepository: UserDataRepository,
+    private val accountService: AccountService,
+) {
     @Value("\${ADMIN_PASS:undefined}")
     lateinit var adminPass: String
 
     @EventListener
-    @Requires(notEnv = ["prod"])
+    @Requires(notEnv = ["prod", "test"])
     fun onStartup(event: StartupEvent) {
         if (userDataRepository.getUserDataByName("Jeff") != null) {
             return
@@ -46,14 +55,14 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             UserData(
                 name = "Jeff",
                 email = "jeff@bank.no",
-                password = AccountCreationService().hashPassword("123"),
+                password = accountService.hashPassword("123"),
                 img = "www.test.com/1.png",
             )
         val user2 =
             UserData(
-                name = "Paul",
-                email = "pauling@gmail.com",
-                password = AccountCreationService().hashPassword("42"),
+                name = "Jimmy",
+                email = "jimmy@gmail.com",
+                password = accountService.hashPassword("42"),
                 img = "www.test.com/2.png",
             )
 
@@ -65,6 +74,15 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             Whiskey(img = "test.com/img", title = "Test", price = 199.6, summary = "its a whiskey", volume = 1.5, percentage = 99.9)
         val whiskey2 =
             Whiskey(img = "test2.com/img", title = "Test2", price = 5.0, summary = "it is another whiskey", volume = 0.4, percentage = 21.0)
+        val whiskey3 =
+            Whiskey(
+                img = "test3.com/img",
+                title = "Test3",
+                price = 100.0,
+                summary = "it is yet another whiskey",
+                volume = 0.5,
+                percentage = 20.0,
+            )
 
         // Create ratings
         val rating1 = Rating(body = "test", score = 0.1, title = "its drinkable", user = user1, whiskey = whiskey1)
@@ -88,6 +106,7 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
 
         dbService.save(whiskey1)
         dbService.save(whiskey2)
+        dbService.save(whiskey3)
 
         dbService.save(rating1)
         dbService.save(rating2)
@@ -110,7 +129,7 @@ class TestDataCreator(private val dbService: DatabaseService, private val userDa
             error("Could not find environment variable: ADMIN_PASS")
         }
         val adminUser =
-            UserData(name = "ADMIN", email = "admin@email.com", password = AccountCreationService().hashPassword(adminPass), img = "ADMIN")
+            UserData(name = "ADMIN", email = "admin@email.com", password = accountService.hashPassword(adminPass), img = "ADMIN")
         adminUser.roles.add("ROLE_ADMIN")
         dbService.save(adminUser)
     }

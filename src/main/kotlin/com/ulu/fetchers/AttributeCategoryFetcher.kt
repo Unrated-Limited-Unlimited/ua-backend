@@ -10,17 +10,20 @@ import jakarta.inject.Singleton
 @Singleton
 class AttributeCategoryFetcher(
     private val attributeCategoryRepository: AttributeCategoryRepository,
+    private val requestValidatorService: RequestValidatorService,
     private val securityService: DefaultSecurityService,
 ) {
     fun getAttributeCategories(): DataFetcher<List<AttributeCategory>> {
         return DataFetcher {
-            return@DataFetcher attributeCategoryRepository.findAll()
+            val categories = attributeCategoryRepository.findAll()
+            categories.forEach { it.calculateAvgScore() }
+            return@DataFetcher categories
         }
     }
 
     fun createAttributeCategory(): DataFetcher<AttributeCategory> {
         return DataFetcher {
-            RequestValidatorService().verifyAdmin(securityService)
+            requestValidatorService.verifyAdmin(securityService)
             val name: String = it.getArgument("name")
             if (attributeCategoryRepository.existsByName(name)) {
                 error("AttributeCategory with identical name already exists")
@@ -31,7 +34,7 @@ class AttributeCategoryFetcher(
 
     fun editAttributeCategory(): DataFetcher<AttributeCategory> {
         return DataFetcher {
-            RequestValidatorService().verifyAdmin(securityService)
+            requestValidatorService.verifyAdmin(securityService)
 
             val attributeCategoryId = it.getArgument<String>("id").toLong()
             val name: String = it.getArgument("name")
@@ -50,7 +53,7 @@ class AttributeCategoryFetcher(
 
     fun deleteAttributeCategory(): DataFetcher<String> {
         return DataFetcher {
-            RequestValidatorService().verifyAdmin(securityService)
+            requestValidatorService.verifyAdmin(securityService)
 
             attributeCategoryRepository.deleteById(it.getArgument("id"))
             return@DataFetcher "deleted"

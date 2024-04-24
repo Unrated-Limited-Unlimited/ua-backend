@@ -7,21 +7,19 @@ import graphql.schema.idl.RuntimeWiring
 import graphql.schema.idl.SchemaGenerator
 import graphql.schema.idl.SchemaParser
 import graphql.schema.idl.TypeDefinitionRegistry
-import graphql.schema.idl.TypeRuntimeWiring
 import io.micronaut.context.annotation.Bean
 import io.micronaut.context.annotation.Factory
 import io.micronaut.core.io.ResourceResolver
+import jakarta.inject.Singleton
 import org.slf4j.LoggerFactory
 import java.io.BufferedReader
 import java.io.InputStreamReader
-import jakarta.inject.Singleton
 
 /**
  * Factory that maps the Query and Mutations defined in the graphql schema to functions/fetchers
  * */
 @Factory
 class GraphQLFactory {
-
     @Bean
     @Singleton
     fun graphQL(
@@ -30,7 +28,7 @@ class GraphQLFactory {
         userDataFetcher: UserDataFetcher,
         ratingFetcher: RatingFetcher,
         thumbFetcher: ThumbFetcher,
-        attributeCategoryFetcher: AttributeCategoryFetcher
+        attributeCategoryFetcher: AttributeCategoryFetcher,
     ): GraphQL {
         val schemaParser = SchemaParser()
 
@@ -41,104 +39,7 @@ class GraphQLFactory {
             typeRegistry.merge(schemaParser.parse(BufferedReader(InputStreamReader(graphqlSchema.get()))))
 
             // Link schema request to dataFetcher functions
-            val runtimeWiring = RuntimeWiring.newRuntimeWiring()
-
-                // User
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getUser", userDataFetcher.getUser())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getLoggedInUser", userDataFetcher.getLoggedInUser())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("editUser", userDataFetcher.editUser())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("deleteUser", userDataFetcher.deleteUser())
-                )
-
-                // Whiskey
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getWhiskeys", whiskeyFetcher.getWhiskeys())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getWhiskey", whiskeyFetcher.getWhiskey())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("createWhiskey", whiskeyFetcher.createWhiskey())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("editWhiskey", whiskeyFetcher.editWhiskey())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("deleteWhiskey", whiskeyFetcher.deleteWhiskey())
-                )
-
-                // Rating
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getRating", ratingFetcher.getRating())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("createRating", ratingFetcher.createRating())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("editRating", ratingFetcher.editRating())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("deleteRating", ratingFetcher.deleteRating())
-                )
-
-                // Thumb
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getThumb", thumbFetcher.getThumb())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("createThumb", thumbFetcher.createThumb())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("editThumb", thumbFetcher.editThumb())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("deleteThumb", thumbFetcher.deleteThumb())
-                )
-
-                //Attribute Category
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Query")
-                        .dataFetcher("getAttributeCategories", attributeCategoryFetcher.getAttributeCategories())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("createAttributeCategory", attributeCategoryFetcher.createAttributeCategory())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("editAttributeCategory", attributeCategoryFetcher.editAttributeCategory())
-                )
-                .type(
-                    TypeRuntimeWiring.newTypeWiring("Mutation")
-                        .dataFetcher("deleteAttributeCategory", attributeCategoryFetcher.deleteAttributeCategory())
-                )
-
-                // Finish/build the schema
-                .build()
+            val runtimeWiring = buildRuntimeWiring(whiskeyFetcher, userDataFetcher, ratingFetcher, thumbFetcher, attributeCategoryFetcher)
 
             val schemaGenerator = SchemaGenerator()
             val graphQLSchema = schemaGenerator.makeExecutableSchema(typeRegistry, runtimeWiring)
@@ -147,6 +48,54 @@ class GraphQLFactory {
             LOG.debug("No GraphQL services found, returning empty schema")
             GraphQL.Builder(GraphQLSchema.newSchema().build()).build()
         }
+    }
+
+    /**
+     * Register the Query and Mutations defined in schema.graphqls to corresponding fetchers
+     * */
+    private fun buildRuntimeWiring(
+        whiskeyFetcher: WhiskeyFetcher,
+        userDataFetcher: UserDataFetcher,
+        ratingFetcher: RatingFetcher,
+        thumbFetcher: ThumbFetcher,
+        attributeCategoryFetcher: AttributeCategoryFetcher,
+    ): RuntimeWiring {
+        return RuntimeWiring.newRuntimeWiring().apply {
+            type("Query") {
+                // Single objects
+                it.dataFetcher("getUser", userDataFetcher.getUser())
+                it.dataFetcher("getLoggedInUser", userDataFetcher.getLoggedInUser())
+                it.dataFetcher("getWhiskey", whiskeyFetcher.getWhiskey())
+                it.dataFetcher("getRating", ratingFetcher.getRating())
+                it.dataFetcher("getThumb", thumbFetcher.getThumb())
+                // Multiple objects
+                it.dataFetcher("getUsers", userDataFetcher.getUsers())
+                it.dataFetcher("getWhiskeys", whiskeyFetcher.getWhiskeys())
+                it.dataFetcher("getAttributeCategories", attributeCategoryFetcher.getAttributeCategories())
+            }
+            type("Mutation") {
+                // User
+                it.dataFetcher("createUser", userDataFetcher.createUser())
+                it.dataFetcher("editUser", userDataFetcher.editUser())
+                it.dataFetcher("deleteUser", userDataFetcher.deleteUser())
+                // Rating
+                it.dataFetcher("createRating", ratingFetcher.createRating())
+                it.dataFetcher("editRating", ratingFetcher.editRating())
+                it.dataFetcher("deleteRating", ratingFetcher.deleteRating())
+                // Thumb / likes
+                it.dataFetcher("createThumb", thumbFetcher.createThumb())
+                it.dataFetcher("editThumb", thumbFetcher.editThumb())
+                it.dataFetcher("deleteThumb", thumbFetcher.deleteThumb())
+                // Whiskey (requires admin)
+                it.dataFetcher("createWhiskey", whiskeyFetcher.createWhiskey())
+                it.dataFetcher("editWhiskey", whiskeyFetcher.editWhiskey())
+                it.dataFetcher("deleteWhiskey", whiskeyFetcher.deleteWhiskey())
+                // Attribute categories (Requires admin)
+                it.dataFetcher("createAttributeCategory", attributeCategoryFetcher.createAttributeCategory())
+                it.dataFetcher("editAttributeCategory", attributeCategoryFetcher.editAttributeCategory())
+                it.dataFetcher("deleteAttributeCategory", attributeCategoryFetcher.deleteAttributeCategory())
+            }
+        }.build()
     }
 
     companion object {

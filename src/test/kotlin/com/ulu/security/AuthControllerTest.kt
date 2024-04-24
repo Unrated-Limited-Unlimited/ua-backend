@@ -1,7 +1,7 @@
 package com.ulu.security
 
 import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
@@ -17,13 +17,14 @@ import org.junit.jupiter.api.Assertions.*
 @MicronautTest(environments = ["test"])
 class AuthControllerTest(
     @Client("/") private val client: HttpClient,
-    private val userDataRepository: UserDataRepository
+    private val userDataRepository: UserDataRepository,
+    private val accountService: AccountService,
 ) {
     data class RegisterDTO(
         val username: String,
         val password: String,
         val email: String? = null,
-        val img: String? = null
+        val img: String? = null,
     )
 
     @Test
@@ -45,13 +46,19 @@ class AuthControllerTest(
         assertNotNull(loginResponse.body().accessToken)
 
         // Verify access to /graphql using bearer token
-        val graphQlRequest = HttpRequest.POST("/graphql", """ { "query": "{ getLoggedInUser{ id, name } }" }" """).bearerAuth(loginResponse.body().accessToken)
-        val graphQlResponse = client.toBlocking().exchange(
-            graphQlRequest, Argument.mapOf(
-                String::class.java,
-                Any::class.java
+        val graphQlRequest =
+            HttpRequest.POST(
+                "/graphql",
+                """ { "query": "{ getLoggedInUser{ id, name } }" }" """,
+            ).bearerAuth(loginResponse.body().accessToken)
+        val graphQlResponse =
+            client.toBlocking().exchange(
+                graphQlRequest,
+                Argument.mapOf(
+                    String::class.java,
+                    Any::class.java,
+                ),
             )
-        )
         assertEquals(HttpStatus.OK, graphQlResponse.status)
         assertNotNull(graphQlResponse.body())
 
@@ -67,21 +74,25 @@ class AuthControllerTest(
 
         // Verify revoked access
         try {
-            val graphQlUnauthorizedRequest = HttpRequest.POST("/graphql", """ { "query": "{ getLoggedInUser{ id, name } }" }" """).bearerAuth(loginResponse.body().accessToken)
-            val graphQlUnauthorizedResponse = client.toBlocking().exchange(
-                graphQlUnauthorizedRequest, Argument.mapOf(
-                    String::class.java,
-                    Any::class.java
+            val graphQlUnauthorizedRequest =
+                HttpRequest.POST(
+                    "/graphql",
+                    """ { "query": "{ getLoggedInUser{ id, name } }" }" """,
+                ).bearerAuth(loginResponse.body().accessToken)
+            val graphQlUnauthorizedResponse =
+                client.toBlocking().exchange(
+                    graphQlUnauthorizedRequest,
+                    Argument.mapOf(
+                        String::class.java,
+                        Any::class.java,
+                    ),
                 )
-            )
             assertEquals(HttpStatus.OK, graphQlUnauthorizedResponse.status)
             assertNotNull(graphQlUnauthorizedResponse.body())
-        }
-        catch (err : HttpClientResponseException){
+        } catch (err: HttpClientResponseException) {
             assertEquals(HttpStatus.UNAUTHORIZED, err.status)
         }
     }
-
 
     @Test
     fun badRegistrationRequestTest() {
@@ -103,13 +114,13 @@ class AuthControllerTest(
 
     @Test
     fun emailValidatorTest() {
-        assertTrue(AccountCreationService().isValidEmail("test@gmail.com"))
-        assertTrue(AccountCreationService().isValidEmail("student.given.mail@institusion.edu"))
+        assertTrue(accountService.isValidEmail("test@gmail.com"))
+        assertTrue(accountService.isValidEmail("student.given.mail@institusion.edu"))
 
-        assertFalse(AccountCreationService().isValidEmail("test@test"))
-        assertFalse(AccountCreationService().isValidEmail("test@.no"))
-        assertFalse(AccountCreationService().isValidEmail("@test.no"))
-        assertFalse(AccountCreationService().isValidEmail("test"))
-        assertFalse(AccountCreationService().isValidEmail(""))
+        assertFalse(accountService.isValidEmail("test@test"))
+        assertFalse(accountService.isValidEmail("test@.no"))
+        assertFalse(accountService.isValidEmail("@test.no"))
+        assertFalse(accountService.isValidEmail("test"))
+        assertFalse(accountService.isValidEmail(""))
     }
 }

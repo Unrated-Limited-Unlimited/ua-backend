@@ -5,7 +5,7 @@ import com.nimbusds.jwt.SignedJWT
 import com.ulu.models.UserData
 import com.ulu.repositories.JwtRefreshTokenRepository
 import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.HttpResponse
@@ -26,25 +26,38 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @MicronautTest(environments = ["test"])
-class JwtAuthenticationTest(@Client("/") val client: HttpClient, private val userDataRepository: UserDataRepository, private val jwtRefreshTokenRepository: JwtRefreshTokenRepository) {
-    private var userData = UserData(name = "Test", password = AccountCreationService().hashPassword("123"), email = "test@email.com", img = "www.test.com/images")
+class JwtAuthenticationTest(
+    @Client("/") val client: HttpClient,
+    private val userDataRepository: UserDataRepository,
+    private val jwtRefreshTokenRepository: JwtRefreshTokenRepository,
+    private val accountService: AccountService,
+) {
+    private var userData =
+        UserData(name = "Test", password = accountService.hashPassword("123"), email = "test@email.com", img = "www.test.com/images")
 
     @BeforeEach
-    fun setup(){
-        userData = UserData(name = "Test", password = AccountCreationService().hashPassword("123"), email = "test@email.com", img = "www.test.com/images")
+    fun setup() {
+        userData =
+            UserData(
+                name = "Test",
+                password = accountService.hashPassword("123"),
+                email = "test@email.com",
+                img = "www.test.com/images",
+            )
         userDataRepository.save(userData)
     }
 
     @AfterEach
-    fun cleanup(){
+    fun cleanup() {
         userDataRepository.delete(userData)
     }
 
     @Test
     fun securedEndpointWithNoAuthReturnsUnauthorized() {
-        val e = assertThrows(HttpClientResponseException::class.java) {
-            client.toBlocking().exchange<Any, Any>(HttpRequest.GET<Any>("/").accept(TEXT_PLAIN))
-        }
+        val e =
+            assertThrows(HttpClientResponseException::class.java) {
+                client.toBlocking().exchange<Any, Any>(HttpRequest.GET<Any>("/").accept(TEXT_PLAIN))
+            }
         assertEquals(UNAUTHORIZED, e.status)
     }
 
@@ -68,19 +81,21 @@ class JwtAuthenticationTest(@Client("/") val client: HttpClient, private val use
         val getUserQuery = """{"query" :"{ getUser(name: \"${userData.name}\"){ id,name } }"}"""
         val accessToken: String = bearerAccessRefreshToken.accessToken
 
-        val requestWithAuthorization = HttpRequest.POST("/graphql",getUserQuery).bearerAuth(accessToken)
-        val response = client.toBlocking().exchange(
-            requestWithAuthorization, Argument.mapOf(
-                String::class.java,
-                Any::class.java
+        val requestWithAuthorization = HttpRequest.POST("/graphql", getUserQuery).bearerAuth(accessToken)
+        val response =
+            client.toBlocking().exchange(
+                requestWithAuthorization,
+                Argument.mapOf(
+                    String::class.java,
+                    Any::class.java,
+                ),
             )
-        )
         assertEquals(OK, rsp.status)
         assertEquals("{data={getUser={id=${userData.id}, name=${userData.name}}}}", response.body().toString())
     }
 
     @Test
-    fun jwtRefresh(){
+    fun jwtRefresh() {
         val oldTokenCount = jwtRefreshTokenRepository.count()
 
         // Login
@@ -98,14 +113,18 @@ class JwtAuthenticationTest(@Client("/") val client: HttpClient, private val use
         assertNotNull(bearerAccessRefreshToken.refreshToken)
 
         Thread.sleep(1000) // sleep for one second to give time for the issued at `iat` Claim to change
-        val refreshResponse = client.toBlocking().retrieve(HttpRequest.POST("/oauth/access_token",
-            TokenRefreshRequest(TokenRefreshRequest.GRANT_TYPE_REFRESH_TOKEN, bearerAccessRefreshToken.refreshToken)
-        ), AccessRefreshToken::class.java)
+        val refreshResponse =
+            client.toBlocking().retrieve(
+                HttpRequest.POST(
+                    "/oauth/access_token",
+                    TokenRefreshRequest(TokenRefreshRequest.GRANT_TYPE_REFRESH_TOKEN, bearerAccessRefreshToken.refreshToken),
+                ),
+                AccessRefreshToken::class.java,
+            )
 
         assertNotNull(refreshResponse.accessToken)
         assertNotEquals(bearerAccessRefreshToken.accessToken, refreshResponse.accessToken)
 
         jwtRefreshTokenRepository.deleteAll()
     }
-
 }
