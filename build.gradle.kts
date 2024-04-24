@@ -7,6 +7,7 @@ plugins {
     id("io.micronaut.application") version "4.3.2"
     id("io.micronaut.test-resources") version "4.3.2"
     id("io.micronaut.aot") version "4.3.2"
+    id ("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
 }
 
 version = "0.1"
@@ -25,6 +26,8 @@ dependencies {
     implementation("io.micronaut:micronaut-jackson-databind")
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.graphql:micronaut-graphql")
+
+    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("org.yaml:snakeyaml")
