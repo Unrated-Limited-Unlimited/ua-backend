@@ -2,21 +2,21 @@ package com.ulu.fetchers
 
 import com.ulu.models.AttributeCategory
 import com.ulu.models.Whiskey
-import com.ulu.repositories.AttributeCategoryRepository
-import com.ulu.repositories.WhiskeyRepository
+import com.ulu.repositories.*
 import com.ulu.services.RequestValidatorService
-import com.ulu.sorters.SortByBestRating
-import com.ulu.sorters.SortByPrice
-import com.ulu.sorters.SortByRandom
-import com.ulu.sorters.SortByTotalRatings
+import com.ulu.sorters.*
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
+import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class WhiskeyFetcher(
     private val whiskeyRepository: WhiskeyRepository,
+    private val ratingRepository: RatingRepository,
+    private val userDataRepository: UserDataRepository,
+    private val thumbRepository: ThumbRepository,
     private val attributeCategoryRepository: AttributeCategoryRepository,
     private val securityService: DefaultSecurityService,
 ) {
@@ -31,7 +31,22 @@ class WhiskeyFetcher(
             whiskey.calculateAvgScore()
             whiskey.categories = attributeCategoryRepository.findByWhiskeyId(whiskey.id!!)
             whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
-            whiskey.calculateAvgAttributeCategoryScore()
+
+            if (securityService.authentication.isPresent) {
+                val user = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
+
+                // Populate the review whiskey field if user is logged in.
+                whiskey.review = ratingRepository.findByWhiskeyIdAndUserId(whiskey.id, user.id!!)
+
+                // For each rating add the thumb rating that belongs to the user as votedThumb
+                whiskey.ratings.forEach { rating -> rating.votedThumb = thumbRepository.getByRatingAndUser(rating, user).getOrNull() }
+            }
+
+            // Calculate the amount of good and bad thumbs for each rating
+            whiskey.ratings.forEach { rating ->
+                rating.goodThumbs = rating.thumbs.filter { it.isGood }.size
+                rating.badThumbs = rating.thumbs.filter { !it.isGood }.size
+            }
 
             return@DataFetcher whiskey
         }
@@ -45,10 +60,9 @@ class WhiskeyFetcher(
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
-                it.calculateAvgScore()
-                it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!)
-                it.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
-                it.calculateAvgAttributeCategoryScore()
+                it.calculateAvgScore() // Calculate average score for each whiskey
+                it.categories = attributeCategoryRepository.findByWhiskeyId(it.id!!) // Get all attribute categories used for this whiskey.
+                it.categories.map { a: AttributeCategory -> a.calculateAvgScore(it.id) } // Calculate average attribute score for whiskeys
             }
 
             // Filter whiskeys based on filters input
@@ -63,6 +77,15 @@ class WhiskeyFetcher(
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
                         "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
                         "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
+                        "RECOMMENDED" ->
+                            SortByRecommendations(
+                                whiskeyRepository,
+                            ).sortWhiskey(
+                                whiskeys,
+                                userDataRepository.getUserDataByName(
+                                    securityService.authentication.get().name,
+                                )!!.id ?: error("lmao, no ID found"),
+                            )
                         else -> whiskeys
                     }
                 }

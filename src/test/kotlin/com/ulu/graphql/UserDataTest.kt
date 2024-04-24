@@ -5,7 +5,7 @@ import com.nimbusds.jwt.SignedJWT
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.services.DatabaseService
 import io.micronaut.core.type.Argument
 import io.micronaut.http.HttpRequest
@@ -20,22 +20,27 @@ import org.junit.jupiter.api.*
 import org.junit.jupiter.api.Assertions.*
 
 @MicronautTest(environments = ["test"])
-class UserDataTest(@Client("/") private val client: HttpClient, private val databaseService: DatabaseService) {
+class UserDataTest(
+    @Client("/") private val client: HttpClient,
+    private val databaseService: DatabaseService,
+    private val accountService: AccountService,
+) {
     private var user: UserData? = null
     private var whiskey: Whiskey? = null
     private var rating: Rating? = null
 
     @BeforeEach
     fun setup() {
-        user = UserData(name = "John", password = AccountCreationService().hashPassword("321"), email = "test@proton.com", img = "img.txt")
-        whiskey = Whiskey(
-            title = "test",
-            summary = "Its a test",
-            img = "owl.png",
-            percentage = 99.9,
-            price = 199.0,
-            volume = 10.0
-        )
+        user = UserData(name = "John", password = accountService.hashPassword("321"), email = "test@proton.com", img = "img.txt")
+        whiskey =
+            Whiskey(
+                title = "test",
+                summary = "Its a test",
+                img = "owl.png",
+                percentage = 99.9,
+                price = 199.0,
+                volume = 10.0,
+            )
         rating =
             Rating(user = user, whiskey = whiskey, title = "Mid", body = "This is an in-depth review.", score = 2.0)
 
@@ -131,12 +136,14 @@ class UserDataTest(@Client("/") private val client: HttpClient, private val data
 
     private fun makeRequest(query: String): Map<String, Any> {
         val requestWithAuthorization = HttpRequest.POST("/graphql", query).bearerAuth(getJwtToken())
-        val response = client.toBlocking().exchange(
-            requestWithAuthorization, Argument.mapOf(
-                String::class.java,
-                Any::class.java
+        val response =
+            client.toBlocking().exchange(
+                requestWithAuthorization,
+                Argument.mapOf(
+                    String::class.java,
+                    Any::class.java,
+                ),
             )
-        )
         assertEquals(HttpStatus.OK, response.status)
         println(response.body())
         return response.body()

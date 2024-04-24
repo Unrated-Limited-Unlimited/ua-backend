@@ -4,7 +4,7 @@ enum SortType{
     POPULAR,
     RANDOM,
     DEFAULT,
-    #PERSONALIZED # Get "AI" recommended based on user preferences
+    RECOMMENDED # AI recommendation
 }
 
 enum Comparator {
@@ -20,8 +20,8 @@ type Query{
     # Get logged in user using JWT
     getLoggedInUser : AuthUser
 
-    # User starting with name used for profile view
-    getUser(name: String!) : User
+    # Get a user using either user id or username for profile view
+    getUser(id: ID, name: String) : User
 
     # Get own thumb verdict from a rating/review
     getThumb(ratingId: ID!) : Thumb
@@ -40,6 +40,7 @@ type Query{
 
 type Mutation{
     #Requires valid JWT token
+    createUser(user: CreateUserInput!) : AuthUser
     editUser(user : EditUserInput) : AuthUser
     deleteUser : String
 
@@ -106,10 +107,15 @@ input AttributeInput{
     score: Float!
 }
 
+input CreateUserInput{
+    name: String!
+    email: String!
+    password: String!
+}
+
 input EditUserInput{
     email: String
     password: String
-    img: String
 }
 
 input WhiskeyInput{
@@ -155,6 +161,7 @@ type Whiskey{
     volume: Float
     percentage: Float
 
+    review: Rating # If a user has already rated a whiskey, this field will be populated on getWhiskey().
     ratings: [Rating]
     avgScore: Float # Average score of all ratings
 
@@ -173,6 +180,10 @@ type Rating{
     createdAt: String
 
     thumbs: [Thumb]
+
+    votedThumb: Thumb # This will be populated when getWhiskey is used and user has liked a the rating.
+    goodThumbs: Int # Populated when getWhiskey is used and counts thumbs that isGood is true
+    badThumbs: Int # Populated when getWhiskey is used and counts thumbs that isGood is false
 }
 
 type Thumb{
