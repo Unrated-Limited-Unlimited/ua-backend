@@ -2,7 +2,7 @@ package com.ulu.security
 
 import com.ulu.models.UserData
 import com.ulu.repositories.UserDataRepository
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import io.micronaut.http.HttpRequest
 import io.micronaut.security.authentication.*
 import io.micronaut.security.authentication.provider.HttpRequestAuthenticationProvider
@@ -12,16 +12,19 @@ import jakarta.inject.Singleton
  * Validates authentication requests sent to POST /login
  * */
 @Singleton
-class LoginProvider<B>(private val userDataRepository: UserDataRepository) : HttpRequestAuthenticationProvider<B> {
-
+class LoginProvider<B>(
+    private val userDataRepository: UserDataRepository,
+    private val accountService: AccountService,
+) : HttpRequestAuthenticationProvider<B> {
     override fun authenticate(
         httpRequest: HttpRequest<B>?,
-        authenticationRequest: AuthenticationRequest<String, String>
+        authenticationRequest: AuthenticationRequest<String, String>,
     ): AuthenticationResponse {
         val userData: UserData? = userDataRepository.getUserDataByName(authenticationRequest.identity)
-        return if (userData != null && AccountCreationService().checkPassword(
+        return if (userData != null &&
+            accountService.checkPassword(
                 authenticationRequest.secret,
-                userData.password
+                userData.password,
             )
         ) {
             AuthenticationResponse.success(authenticationRequest.identity, userData.roles)

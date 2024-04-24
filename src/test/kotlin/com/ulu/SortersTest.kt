@@ -3,7 +3,7 @@ package com.ulu
 import com.ulu.models.Rating
 import com.ulu.models.UserData
 import com.ulu.models.Whiskey
-import com.ulu.services.AccountCreationService
+import com.ulu.services.AccountService
 import com.ulu.sorters.SortByBestRating
 import com.ulu.sorters.SortByPrice
 import com.ulu.sorters.SortByTotalRatings
@@ -13,7 +13,7 @@ import org.junit.jupiter.api.BeforeEach
 import org.junit.jupiter.api.Test
 
 @MicronautTest(environments = ["test"])
-class SortersTest {
+class SortersTest(private val accountService: AccountService) {
     private val whiskeyList: MutableList<Whiskey> = mutableListOf()
 
     private var whiskey1: Whiskey? = null
@@ -26,7 +26,7 @@ class SortersTest {
             UserData(
                 name = "Mark",
                 email = "mark@email.no",
-                password = AccountCreationService().hashPassword("123"),
+                password = accountService.hashPassword("123"),
                 img = "www.test.com/5.png",
             )
 

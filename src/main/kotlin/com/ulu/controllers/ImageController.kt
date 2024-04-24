@@ -10,12 +10,15 @@ import io.micronaut.http.multipart.CompletedFileUpload
 import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.DefaultSecurityService
+import io.swagger.v3.oas.annotations.Operation
+import io.swagger.v3.oas.annotations.responses.ApiResponse
+import io.swagger.v3.oas.annotations.responses.ApiResponses
 
 /**
  * REST endpoints for uploading images to the file storage microservice.
  *
  * Users must be logged in to upload images.
- * They can upload a profile image, and it will be stored as a jpg file storage at:
+ * They can upload a profile image, and it will be stored in the file storage as a jpg:
  * "/api/img/{prefix}{user.id}" where prefix is "p" for profile image and "w" for whiskey.
  *
  * Only admins can upload Whiskey images.
@@ -29,6 +32,13 @@ class ImageController(
     private val uploadService: UploadService,
 ) {
     @Post("/img/whiskey/{id}", consumes = [MediaType.MULTIPART_FORM_DATA], produces = [MediaType.TEXT_PLAIN])
+    @Operation(summary = "Upload Whiskey Image", description = "Uploads an image for a specific whiskey. Only accessible by admins.")
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Image successfully uploaded."),
+        ApiResponse(responseCode = "401", description = "Unauthorized access, admin user required."),
+        ApiResponse(responseCode = "400", description = "Invalid file size or type for file upload."),
+        ApiResponse(responseCode = "500", description = "Internal server error; file storage server might be unreachable."),
+    )
     fun whiskeyImagePost(
         @PathVariable id: String,
         @Part("file") fileUpload: CompletedFileUpload,
@@ -37,7 +47,6 @@ class ImageController(
         if (!requestValidatorService.isAdmin(securityService)) {
             return HttpResponse.unauthorized()
         }
-
         // Verify type of upload.
         if (!uploadService.isUploadedFileImage(fileUpload)) {
             return HttpResponse.badRequest("File must be an image")
@@ -65,6 +74,12 @@ class ImageController(
     }
 
     @Post("/img/profile", consumes = [MediaType.MULTIPART_FORM_DATA], produces = [MediaType.TEXT_PLAIN])
+    @Operation(summary = "Upload Profile Image", description = "Uploads a profile image for the authenticated user.")
+    @ApiResponses(
+        ApiResponse(responseCode = "200", description = "Profile image successfully uploaded to file storage."),
+        ApiResponse(responseCode = "400", description = "Invalid file size or type for file upload."),
+        ApiResponse(responseCode = "500", description = "Internal server error; file storage server might be unreachable."),
+    )
     fun profileImagePost(
         @Part("file") fileUpload: CompletedFileUpload,
     ): HttpResponse<String> {
