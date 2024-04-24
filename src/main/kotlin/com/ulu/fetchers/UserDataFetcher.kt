@@ -9,6 +9,7 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
+import kotlin.jvm.optionals.getOrNull
 
 @Singleton
 class UserDataFetcher(
@@ -18,8 +19,16 @@ class UserDataFetcher(
 ) {
     fun getUser(): DataFetcher<UserData> {
         return DataFetcher { dataFetchingEnvironment: DataFetchingEnvironment ->
-            val userName: String = dataFetchingEnvironment.getArgument("name")
-            return@DataFetcher userDataRepository.getUserDataByName(userName)
+            val userId: Long? = (dataFetchingEnvironment.getArgument("id") as String?)?.toLongOrNull()
+            if (userId != null) {
+                return@DataFetcher userDataRepository.findById(userId).getOrNull()
+            }
+
+            val userName: String? = dataFetchingEnvironment.getArgument("name")
+            if (userName != null) {
+                return@DataFetcher userDataRepository.getUserDataByName(userName)
+            }
+            error("Username or user id needs to be passed in query call.")
         }
     }
 
