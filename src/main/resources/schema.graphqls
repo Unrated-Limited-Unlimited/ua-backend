@@ -20,8 +20,8 @@ type Query{
     # Get logged in user using JWT
     getLoggedInUser : AuthUser
 
-    # User starting with name used for profile view
-    getUser(name: String!) : User
+    # Get a user using either user id or username for profile view
+    getUser(id: ID, name: String) : User
 
     # Get own thumb verdict from a rating/review
     getThumb(ratingId: ID!) : Thumb
