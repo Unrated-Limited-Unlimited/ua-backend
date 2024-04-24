@@ -1,5 +1,7 @@
 package com.ulu.services
 
+import graphql.schema.DataFetchingEnvironment
+import io.micronaut.data.model.Pageable
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
 
@@ -55,5 +57,18 @@ class RequestValidatorService {
      * */
     fun isAdmin(securityService: DefaultSecurityService): Boolean {
         return securityService.authentication.get().roles.contains("ROLE_ADMIN")
+    }
+
+    fun getPaging(environment: DataFetchingEnvironment): Pageable {
+        var page = 0
+        var size = 10
+
+        // Get page and size from input
+        val pagingInput = environment.getArgument<Map<*, *>>("paging")
+        if (pagingInput != null) {
+            page = pagingInput["page"] as Int
+            size = pagingInput["size"] as Int
+        }
+        return Pageable.from(page, size)
     }
 }

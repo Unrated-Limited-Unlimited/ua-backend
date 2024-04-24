@@ -10,25 +10,26 @@ class AttributeCategory(
     @Id
     @GeneratedValue
     val id: Long? = null,
-
     var name: String,
-
     @OneToMany(fetch = FetchType.EAGER, mappedBy = "category", orphanRemoval = true)
     val attributes: MutableList<Attribute> = mutableListOf(),
-
     var avgScore: Double = 0.0,
 ) {
-    fun calculateAvgScore() {
+    fun calculateAvgScore(whiskeyId: Long? = null) {
         var totalScore = 0.0
         var count = 0
         this.attributes.forEach { attribute: Attribute ->
+            if (whiskeyId != null && whiskeyId != attribute.rating.whiskey?.id) {
+                return@forEach
+            }
             totalScore += attribute.score
             count++
         }
-        avgScore = if (count > 0) {
-            (totalScore / count)
-        } else {
-            0.0
-        }
+        avgScore =
+            if (count > 0) {
+                (totalScore / count)
+            } else {
+                0.0
+            }
     }
 }
