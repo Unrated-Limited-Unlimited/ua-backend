@@ -4,10 +4,7 @@ import com.ulu.models.AttributeCategory
 import com.ulu.models.Whiskey
 import com.ulu.repositories.*
 import com.ulu.services.RequestValidatorService
-import com.ulu.sorters.SortByBestRating
-import com.ulu.sorters.SortByPrice
-import com.ulu.sorters.SortByRandom
-import com.ulu.sorters.SortByTotalRatings
+import com.ulu.sorters.*
 import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
@@ -80,6 +77,7 @@ class WhiskeyFetcher(
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
                         "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
                         "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
+                        "Recommended" -> SortByRecommendations(whiskeyRepository).sortWhiskey(whiskeys, userDataRepository.getUserDataByName(securityService.authentication.get().name)!!.id ?: error("lmao, no ID found"))
                         else -> whiskeys
                     }
                 }
