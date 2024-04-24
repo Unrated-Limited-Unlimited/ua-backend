@@ -19,7 +19,6 @@ class WhiskeyFetcher(
     private val thumbRepository: ThumbRepository,
     private val attributeCategoryRepository: AttributeCategoryRepository,
     private val securityService: DefaultSecurityService,
-    private val userDataRepository: UserDataRepository,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { environment: DataFetchingEnvironment ->

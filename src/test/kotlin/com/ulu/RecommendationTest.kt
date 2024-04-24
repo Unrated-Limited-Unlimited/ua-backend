@@ -5,9 +5,11 @@ import com.ulu.repositories.WhiskeyRepository
 import com.ulu.sorters.SortByRecommendations
 import io.micronaut.test.extensions.junit5.annotation.MicronautTest
 import jakarta.inject.Inject
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 
 @MicronautTest(environments = ["prod"])
+@Tag("manual")
 class RecommendationTest(private val whiskeyRepository: WhiskeyRepository) {
 
     @Inject
