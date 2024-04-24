@@ -77,7 +77,15 @@ class WhiskeyFetcher(
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
                         "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
                         "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
-                        "Recommended" -> SortByRecommendations(whiskeyRepository).sortWhiskey(whiskeys, userDataRepository.getUserDataByName(securityService.authentication.get().name)!!.id ?: error("lmao, no ID found"))
+                        "RECOMMENDED" ->
+                            SortByRecommendations(
+                                whiskeyRepository,
+                            ).sortWhiskey(
+                                whiskeys,
+                                userDataRepository.getUserDataByName(
+                                    securityService.authentication.get().name,
+                                )!!.id ?: error("lmao, no ID found"),
+                            )
                         else -> whiskeys
                     }
                 }

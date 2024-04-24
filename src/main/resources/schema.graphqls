@@ -4,7 +4,7 @@ enum SortType{
     POPULAR,
     RANDOM,
     DEFAULT,
-    #PERSONALIZED # Get "AI" recommended based on user preferences
+    RECOMMENDED # AI recommendation
 }
 
 enum Comparator {
