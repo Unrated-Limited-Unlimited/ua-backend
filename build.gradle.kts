@@ -57,6 +57,12 @@ java {
     sourceCompatibility = JavaVersion.toVersion("17")
 }
 
+tasks.test {
+    useJUnitPlatform {
+        excludeTags("manual")
+    }
+}
+
 graalvmNative.toolchainDetection.set(false)
 micronaut {
     runtime("netty")

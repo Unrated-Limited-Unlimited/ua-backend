@@ -1,6 +1,7 @@
 package com.ulu.controllers
 
 import com.ulu.repositories.UserDataRepository
+import com.ulu.repositories.WhiskeyRepository
 import com.ulu.services.RequestValidatorService
 import com.ulu.services.UploadService
 import io.micronaut.http.HttpResponse
@@ -28,6 +29,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses
 class ImageController(
     private val securityService: DefaultSecurityService,
     private val userDataRepository: UserDataRepository,
+    private val whiskeyRepository: WhiskeyRepository,
     private val requestValidatorService: RequestValidatorService,
     private val uploadService: UploadService,
 ) {
@@ -52,6 +54,11 @@ class ImageController(
             return HttpResponse.badRequest("File must be an image")
         }
 
+        val whiskey = whiskeyRepository.findById(id.toLong())
+        if (whiskey.isEmpty) {
+            return HttpResponse.badRequest("No whiskey with id: $id")
+        }
+
         // Convert file to jpg byte array
         val byteArray =
             uploadService.imageToJpegByteArray(fileUpload.bytes)
@@ -65,6 +72,9 @@ class ImageController(
             if (response.code() != 200) {
                 return HttpResponse.serverError("Could not upload image to file storage ${response.code()}")
             }
+            whiskey.get().img = "w$id"
+            whiskeyRepository.update(whiskey.get())
+
             return HttpResponse.ok("Image successfully uploaded with status: ${response.status}")
         } catch (e: Exception) {
             println("Error uploading:")
