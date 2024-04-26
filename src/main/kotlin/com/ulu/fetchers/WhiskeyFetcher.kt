@@ -9,6 +9,7 @@ import graphql.schema.DataFetcher
 import graphql.schema.DataFetchingEnvironment
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
+import kotlin.jvm.optionals.getOrElse
 import kotlin.jvm.optionals.getOrNull
 
 @Singleton
@@ -24,8 +25,11 @@ class WhiskeyFetcher(
         return DataFetcher { environment: DataFetchingEnvironment ->
             val whiskeyId: String =
                 environment.getArgument("id")
-                    ?: error("AttributeCategory with identical name already exists")
-            val whiskey: Whiskey = whiskeyRepository.getWhiskeyById(whiskeyId.toLong())
+                    ?: error("Missing required argument 'id'")
+            val whiskey: Whiskey =
+                whiskeyRepository.findById(
+                    whiskeyId.toLong(),
+                ).getOrElse { error("No whiskey with id: $whiskeyId found!") }
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskey.calculateAvgScore()

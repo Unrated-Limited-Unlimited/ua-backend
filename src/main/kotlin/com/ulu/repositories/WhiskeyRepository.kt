@@ -8,7 +8,5 @@ import io.micronaut.data.model.Pageable
 
 @Repository
 interface WhiskeyRepository : JpaRepository<Whiskey, Long> {
-    fun getWhiskeyById(id: Long): Whiskey
-
     fun listAll(pageable: Pageable): Page<Whiskey>
 }
