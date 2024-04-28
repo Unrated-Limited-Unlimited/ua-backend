@@ -1,6 +1,6 @@
 #! /bin/bash
 export MICRONAUT_ENVIRONMENTS=prod
-gradle build clean && gradle build
+/home/ulu/.sdkman/candidates/gradle/current/bin/gradle build clean && /home/ulu/.sdkman/candidates/gradle/current/bin/gradle build
 docker build -t ua-backend .
 docker stop ua-backend
 docker remove ua-backend
