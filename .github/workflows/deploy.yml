@@ -20,6 +20,6 @@ jobs:
         echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
         ssh-keyscan -H ${{ secrets.SSH_HOST }} > ~/.ssh/known_hosts
     - name: deploy
-      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export JAVA_HOME=/home/ulu/.sdkman/candidates/java/current && cd /home/ulu/ULU/ua-backend && git checkout main && git pull && ./startServer.sh && exit"
+      run: ssh ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} "export JAVA_HOME=/home/ulu/.sdkman/candidates/java/current && cd /home/ulu/ULU/ua-backend && git checkout main && git pull && ./startServer.sh ${{ secrets.DB_PASSWORD }} ${{ secrets.ADMIN_PASS }} && exit"
     - name: cleanup
       run: rm -rf ~/.ssh
