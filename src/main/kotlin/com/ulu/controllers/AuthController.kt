@@ -6,6 +6,7 @@ import io.micronaut.http.HttpResponse
 import io.micronaut.http.annotation.Body
 import io.micronaut.http.annotation.Controller
 import io.micronaut.http.annotation.Post
+import io.micronaut.http.cookie.Cookie
 import io.micronaut.security.annotation.Secured
 import io.micronaut.security.rules.SecurityRule
 import io.micronaut.security.utils.DefaultSecurityService
@@ -38,7 +39,12 @@ class AuthController(
     fun logout(): HttpResponse<*> {
         // Invalidates all sessions.
         accountService.invalidateSessions(securityService.authentication.get().name)
-        return HttpResponse.ok("All sessions logged out!")
+
+        // Max age set to 0 to expire immediately
+        val emptyJwtCookie = Cookie.of("JWT", "").maxAge(0)
+        val emptyJwtRefreshCookie = Cookie.of("JWT_REFRESH_TOKEN", "").path("/oauth/access_token").maxAge(0)
+
+        return HttpResponse.ok("All sessions logged out!").cookie(emptyJwtCookie).cookie(emptyJwtRefreshCookie)
     }
 
     @Secured(SecurityRule.IS_ANONYMOUS)
