@@ -4,6 +4,8 @@ import graphql.schema.DataFetchingEnvironment
 import io.micronaut.data.model.Pageable
 import io.micronaut.security.utils.DefaultSecurityService
 import jakarta.inject.Singleton
+import kotlin.math.max
+import kotlin.math.min
 
 @Singleton
 class RequestValidatorService {
@@ -64,11 +66,37 @@ class RequestValidatorService {
         var size = 10
 
         // Get page and size from input
-        val pagingInput = environment.getArgument<Map<*, *>>("paging")
+        val pagingInput = environment.getArgument<Map<String, Int>>("paging")
         if (pagingInput != null) {
-            page = pagingInput["page"] as Int
-            size = pagingInput["size"] as Int
+            page = pagingInput["page"] ?: 0
+            size = pagingInput["size"] ?: 10
         }
+
+        // Limit range of input
+        page = max(0, page)
+        size = max(1, size)
+
         return Pageable.from(page, size)
+    }
+
+    /**
+     * Convert list to paged list
+     * */
+    fun <T> getPage(
+        list: List<T>,
+        pageable: Pageable,
+    ): List<T> {
+        // Calculate the index range for the requested page
+        val fromIndex = pageable.number * pageable.size
+
+        // Constraint paging with max size of list
+        val toIndex = min(fromIndex + pageable.size, list.size)
+
+        // Check if fromIndex is within list size
+        return if (fromIndex < list.size) {
+            list.subList(fromIndex, toIndex)
+        } else {
+            emptyList()
+        }
     }
 }

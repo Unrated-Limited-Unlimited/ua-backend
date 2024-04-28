@@ -3,6 +3,7 @@ package com.ulu.repositories
 import com.ulu.models.Rating
 import io.micronaut.data.annotation.Repository
 import io.micronaut.data.jpa.repository.JpaRepository
+import java.util.*
 
 @Repository
 interface RatingRepository : JpaRepository<Rating, Long> {
@@ -14,5 +15,5 @@ interface RatingRepository : JpaRepository<Rating, Long> {
     fun findByWhiskeyIdAndUserId(
         whiskeyId: Long,
         userId: Long,
-    ): Rating
+    ): Optional<Rating>
 }

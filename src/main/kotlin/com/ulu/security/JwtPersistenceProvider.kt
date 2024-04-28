@@ -11,7 +11,6 @@ import jakarta.inject.Singleton
 import org.reactivestreams.Publisher
 import reactor.core.publisher.Flux
 import reactor.core.publisher.FluxSink
-import java.util.Base64
 
 /**
  * Stores created refresh tokens in JPA repository.
@@ -21,14 +20,14 @@ import java.util.Base64
 @Singleton
 class JwtPersistenceProvider(private val jwtRefreshTokenRepository: JwtRefreshTokenRepository) :
     RefreshTokenPersistence {
-
     override fun persistToken(event: RefreshTokenGeneratedEvent?) {
         if (event?.refreshToken != null && event.authentication?.name != null) {
-            val jwtRefreshToken = JwtRefreshToken(
-                username = event.authentication.name,
-                refreshToken = event.refreshToken,
-                revoked = false
-            )
+            val jwtRefreshToken =
+                JwtRefreshToken(
+                    username = event.authentication.name,
+                    refreshToken = event.refreshToken,
+                    revoked = false,
+                )
             jwtRefreshTokenRepository.saveAndFlush(jwtRefreshToken)
         }
     }
