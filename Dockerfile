@@ -1,14 +1,10 @@
 FROM openjdk:17
 
-# Set the working directory inside the container
-WORKDIR /app
-
-# Copy the JAR file into the container
-COPY build/libs/*.jar app.jar
+COPY . .
 
 # Expose the port your app runs on
 EXPOSE 8000
 
 # Command to run your application
-CMD ["java", "-jar", "app.jar"]
+CMD ["java", "-jar", "build/libs/unrated-0.1-all.jar"]
 
