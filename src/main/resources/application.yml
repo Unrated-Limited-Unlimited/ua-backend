@@ -51,6 +51,8 @@ micronaut:
         enabled: true
       oauth:
         enabled: true
+      logout:
+        enabled: false
     intercept-url-map:
       - pattern: /graphql
         http-method: POST
