@@ -5,18 +5,16 @@ import com.ulu.repositories.WhiskeyRepository
 import io.micronaut.http.HttpRequest
 import io.micronaut.http.client.HttpClient
 import io.micronaut.http.client.annotation.Client
-import jakarta.inject.Inject
 import jakarta.inject.Singleton
 import kotlinx.serialization.json.Json
 import reactor.core.publisher.Mono
 import kotlin.jvm.optionals.getOrElse
 
 @Singleton
-class SortByRecommendations(private val whiskeyRepository: WhiskeyRepository) {
-    @Inject
-    @field:Client("http://127.0.0.1:5000") // Base url for recommendation AI server.
-    lateinit var client: HttpClient
-
+class SortByRecommendations(
+    @Client("http://127.0.0.1:5000") private val client: HttpClient,
+    private val whiskeyRepository: WhiskeyRepository,
+) {
     fun sortWhiskey(id: Long): List<Whiskey> {
         // Create the POST request
         val requestBody = mapOf("number" to id)

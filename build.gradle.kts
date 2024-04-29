@@ -7,7 +7,7 @@ plugins {
     id("io.micronaut.application") version "4.3.2"
     id("io.micronaut.test-resources") version "4.3.2"
     id("io.micronaut.aot") version "4.3.2"
-    id ("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
+    id("org.jetbrains.kotlin.plugin.serialization") version "1.9.22"
 }
 
 version = "0.1"
@@ -27,7 +27,7 @@ dependencies {
     implementation("io.micronaut.data:micronaut-data-hibernate-jpa")
     implementation("io.micronaut.graphql:micronaut-graphql")
 
-    implementation ("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.3")
 
     implementation("at.favre.lib:bcrypt:0.10.2")
     implementation("org.yaml:snakeyaml")
@@ -39,6 +39,7 @@ dependencies {
 
     implementation("org.jetbrains.kotlin:kotlin-reflect:$kotlinVersion")
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
+    implementation("io.micronaut:micronaut-http-client")
     compileOnly("io.micronaut:micronaut-http-client")
     compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
     runtimeOnly("ch.qos.logback:logback-classic")
