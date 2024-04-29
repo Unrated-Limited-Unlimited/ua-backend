@@ -12,7 +12,7 @@ import reactor.core.publisher.Mono
 import kotlin.jvm.optionals.getOrElse
 
 @Singleton
-class SortByRecommendations(val whiskeyRepository: WhiskeyRepository) {
+class SortByRecommendations(private val whiskeyRepository: WhiskeyRepository) {
     @Inject
     @field:Client("http://127.0.0.1:5000") // Base url for recommendation AI server.
     lateinit var client: HttpClient
