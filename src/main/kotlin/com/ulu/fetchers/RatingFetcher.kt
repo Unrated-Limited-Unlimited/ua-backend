@@ -84,8 +84,7 @@ class RatingFetcher(
             // Validate input
             validateRating(rating)
 
-            // Remove previous attributes from review & add updated ones
-            attributeRepository.deleteAll(rating.attributes)
+            // Remove previous attributes from review
             rating.attributes.clear()
 
             // Update the score to each attribute
@@ -138,10 +137,11 @@ class RatingFetcher(
             val attributeScore = attributeInput["score"] as Double
             requestValidatorService.verifyScoreRange(attributeScore)
 
-            // Create a new Attribute and add it to the rating
+            // Create a new Attribute
             val attribute = Attribute(category = attributeCategory.get(), rating = rating, score = attributeScore)
-            rating.attributes.add(attribute)
-            attributeRepository.save(attribute)
+
+            // Save attribute and add it to the rating
+            rating.attributes.add(attributeRepository.saveAndFlush(attribute))
         }
     }
 

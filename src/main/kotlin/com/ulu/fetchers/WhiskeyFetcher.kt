@@ -35,7 +35,7 @@ class WhiskeyFetcher(
             // Update the average rating scores and attribute scores for the whiskey
             whiskey.calculateAvgScore()
             whiskey.categories = attributeCategoryRepository.findByWhiskeyId(whiskey.id!!)
-            whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore() }
+            whiskey.categories.map { a: AttributeCategory -> a.calculateAvgScore(whiskey.id) }
 
             if (securityService.authentication.isPresent) {
                 val user = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
