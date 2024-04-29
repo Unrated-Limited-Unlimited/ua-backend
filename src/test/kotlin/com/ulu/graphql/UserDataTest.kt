@@ -87,6 +87,23 @@ class UserDataTest(
     }
 
     @Test
+    fun createUserTest() {
+        val query =
+            """ { "query": "mutation{ createUser(user: {name: \"newCreated\", password: \"0123456789\" email: \"created@email.com\" } ) { id, name, email, img } }" }" """
+        val body = makeRequest(query)
+        assertNotNull(body)
+
+        val userInfo = body["data"] as Map<*, *>
+        println(userInfo.toString())
+        assertTrue(userInfo.containsKey("createUser"))
+
+        val createUserMap = userInfo["createUser"] as Map<*, *>
+        assertEquals("created@email.com", createUserMap["email"])
+
+        assertEquals("newCreated", createUserMap["name"])
+    }
+
+    @Test
     fun editUserTest() {
         val query =
             """ { "query": "mutation{ editUser(user: {email: \"new@email.com\" } ) { id, name, email, img, ratings { whiskey{title}, body } } }" }" """

@@ -21,6 +21,7 @@ class WhiskeyFetcher(
     private val attributeCategoryRepository: AttributeCategoryRepository,
     private val securityService: DefaultSecurityService,
     private val requestValidatorService: RequestValidatorService,
+    private val whiskeyRecommendations: SortByRecommendations,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { environment: DataFetchingEnvironment ->
@@ -82,13 +83,10 @@ class WhiskeyFetcher(
                         "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
                         "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
                         "RECOMMENDED" ->
-                            SortByRecommendations(
-                                whiskeyRepository,
-                            ).sortWhiskey(
-                                whiskeys,
+                            whiskeyRecommendations.sortWhiskey(
                                 userDataRepository.getUserDataByName(
                                     securityService.authentication.get().name,
-                                )!!.id ?: error("lmao, no ID found"),
+                                )!!.id ?: error("You must be logged in to get personalized recommendations."),
                             )
                         else -> whiskeys
                     }
