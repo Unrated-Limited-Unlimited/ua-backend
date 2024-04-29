@@ -20,6 +20,7 @@ class WhiskeyFetcher(
     private val thumbRepository: ThumbRepository,
     private val attributeCategoryRepository: AttributeCategoryRepository,
     private val securityService: DefaultSecurityService,
+    private val requestValidatorService: RequestValidatorService,
 ) {
     fun getWhiskey(): DataFetcher<Whiskey> {
         return DataFetcher { environment: DataFetchingEnvironment ->
@@ -40,7 +41,7 @@ class WhiskeyFetcher(
                 val user = userDataRepository.getUserDataByName(securityService.authentication.get().name) ?: error("User not found")
 
                 // Populate the review whiskey field if user is logged in.
-                whiskey.review = ratingRepository.findByWhiskeyIdAndUserId(whiskey.id, user.id!!)
+                whiskey.review = ratingRepository.findByWhiskeyIdAndUserId(whiskey.id, user.id!!).getOrNull()
 
                 // For each rating add the thumb rating that belongs to the user as votedThumb
                 whiskey.ratings.forEach { rating -> rating.votedThumb = thumbRepository.getByRatingAndUser(rating, user).getOrNull() }
@@ -59,8 +60,7 @@ class WhiskeyFetcher(
     fun getWhiskeys(): DataFetcher<List<Whiskey>> {
         return DataFetcher { environment: DataFetchingEnvironment ->
             // Find whiskeys using paging
-            var whiskeys: List<Whiskey> =
-                whiskeyRepository.listAll(RequestValidatorService().getPaging(environment)).content
+            var whiskeys: List<Whiskey> = whiskeyRepository.findAll()
 
             // Update the average rating scores and attribute scores for the whiskey
             whiskeys.forEach {
@@ -74,7 +74,7 @@ class WhiskeyFetcher(
 
             // Sort whiskeys
             val sort = environment.getArgument("sort") as Map<*, *>?
-            val sortedWhiskey =
+            var sortedWhiskey =
                 sort?.get("sortType").let {
                     when (it) {
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
@@ -97,9 +97,11 @@ class WhiskeyFetcher(
             // Reverse sorted list
             val isReversed = sort?.get("reverse") as Boolean?
             if (isReversed != null && isReversed) {
-                return@DataFetcher sortedWhiskey.reversed()
+                sortedWhiskey = sortedWhiskey.reversed()
             }
-            return@DataFetcher sortedWhiskey
+
+            // Return with paging applied
+            return@DataFetcher requestValidatorService.getPage(sortedWhiskey, requestValidatorService.getPaging(environment))
         }
     }
 
@@ -224,7 +226,6 @@ class WhiskeyFetcher(
                 }
             }
         }
-
         // Unfiltered
         return whiskeys
     }
