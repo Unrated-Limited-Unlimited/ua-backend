@@ -1,6 +1,7 @@
 package com.ulu.fetchers
 
 import com.ulu.models.Thumb
+import com.ulu.repositories.RatingRepository
 import com.ulu.repositories.ThumbRepository
 import com.ulu.repositories.UserDataRepository
 import com.ulu.services.RequestValidatorService
@@ -14,17 +15,22 @@ class ThumbFetcher(
     private val securityService: DefaultSecurityService,
     private val thumbRepository: ThumbRepository,
     private val userDataRepository: UserDataRepository,
-    private val ratingFetcher: RatingFetcher,
+    private val ratingRepository: RatingRepository,
 ) {
     fun getThumb(): DataFetcher<Thumb> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            val rating = ratingFetcher.getOwnedRatingById(environment, "ratingId")
+            val ratingId = (environment.getArgument("ratingId") as String).toLong()
+            val rating = ratingRepository.findById(ratingId)
+            if (rating.isEmpty) {
+                error("No rating with id $ratingId.")
+            }
+
             val userData =
                 userDataRepository.getUserDataByName(securityService.authentication.get().name)
                     ?: error("No user found")
-            val thumb = thumbRepository.getByRatingAndUser(rating = rating, user = userData)
+            val thumb = thumbRepository.getByRatingAndUser(rating = rating.get(), user = userData)
             if (thumb.isEmpty) {
-                error("Could not find thumb by ${userData.name} for rating with id: ${rating.id}")
+                error("Could not find thumb by ${userData.name} for rating with id: ${rating.get().id}")
             }
             return@DataFetcher thumb.get()
         }
@@ -32,17 +38,20 @@ class ThumbFetcher(
 
     fun createThumb(): DataFetcher<Thumb> {
         return DataFetcher { environment: DataFetchingEnvironment ->
-            RequestValidatorService().verifyAuthenticated(securityService)
+            val ratingId = (environment.getArgument("ratingId") as String).toLong()
+            val rating = ratingRepository.findById(ratingId)
+            if (rating.isEmpty) {
+                error("No rating with id $ratingId.")
+            }
 
             val isGood = environment.getArgument("isGood") as Boolean
-            val rating = ratingFetcher.getOwnedRatingById(environment, "ratingId")
             val userData =
                 userDataRepository.getUserDataByName(securityService.authentication.get().name)
                     ?: error("User not found")
-            if (thumbRepository.existsByUserAndRating(userData, rating)) {
-                error("Thumb rating already exists for rating with id: ${rating.id}")
+            if (thumbRepository.existsByUserAndRating(userData, rating.get())) {
+                error("Thumb rating already exists for rating with id: ${rating.get().id}")
             }
-            return@DataFetcher thumbRepository.save(Thumb(user = userData, rating = rating, isGood = isGood))
+            return@DataFetcher thumbRepository.save(Thumb(user = userData, rating = rating.get(), isGood = isGood))
         }
     }
 
