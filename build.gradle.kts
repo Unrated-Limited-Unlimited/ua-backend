@@ -41,6 +41,8 @@ dependencies {
     implementation("org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion")
     implementation("io.micronaut:micronaut-http-client")
     compileOnly("io.micronaut:micronaut-http-client")
+
+    implementation("io.micronaut.openapi:micronaut-openapi-annotations")
     compileOnly("io.micronaut.openapi:micronaut-openapi-annotations")
     runtimeOnly("ch.qos.logback:logback-classic")
     runtimeOnly("com.fasterxml.jackson.module:jackson-module-kotlin")
