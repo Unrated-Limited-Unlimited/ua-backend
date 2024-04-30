@@ -7,6 +7,6 @@ import com.ulu.models.Whiskey
  */
 class SortByPrice {
     fun sortWhiskey(whiskeys : List<Whiskey>) :  List<Whiskey> {
-        return whiskeys.sortedByDescending { it.price / it.volume }
+        return whiskeys.sortedByDescending { it.price }
     }
 }

@@ -2,6 +2,7 @@ enum SortType{
     BEST,
     HIGHEST,
     PRICE,
+    VALUE,
     POPULAR,
     RANDOM,
     DEFAULT,

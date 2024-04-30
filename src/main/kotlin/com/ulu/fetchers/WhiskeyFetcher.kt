@@ -81,6 +81,7 @@ class WhiskeyFetcher(
                         "BEST" -> SortByBestRating().sortWhiskey(whiskeys)
                         "HIGHEST" -> SortByHighestRating().sortWhiskey(whiskeys)
                         "PRICE" -> SortByPrice().sortWhiskey(whiskeys)
+                        "VALUE" -> SortByValue().sortWhiskey(whiskeys)
                         "POPULAR" -> SortByTotalRatings().sortWhiskey(whiskeys)
                         "RANDOM" -> SortByRandom().sortWhiskey(whiskeys)
                         "RECOMMENDED" ->
