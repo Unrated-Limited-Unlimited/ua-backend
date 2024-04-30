@@ -102,4 +102,11 @@ class SortersTest(private val accountService: AccountService) {
         assertEquals(sorted[1], whiskey1!!)
         assertEquals(sorted[2], whiskey3!!)
     }
+
+    @Test
+    fun byHighestRating(){
+        val sorted = SortByBestRating().sortWhiskey(whiskeyList)
+        assertEquals(sorted[0], whiskey2!!)
+        assertEquals(sorted[1], whiskey1!!)
+    }
 }
