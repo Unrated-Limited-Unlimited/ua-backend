@@ -83,6 +83,7 @@ class ImageController(
         }
     }
 
+    @Secured(SecurityRule.IS_AUTHENTICATED)
     @Post("/img/profile", consumes = [MediaType.MULTIPART_FORM_DATA], produces = [MediaType.TEXT_PLAIN])
     @Operation(summary = "Upload Profile Image", description = "Uploads a profile image for the authenticated user.")
     @ApiResponses(
